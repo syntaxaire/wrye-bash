@@ -63,7 +63,7 @@ from functools import partial
 from operator import itemgetter
 from types import ClassType
 #--wxPython
-import wx
+from ..bass import wx
 
 #--Local
 from .. import bush, bosh, bolt, bass, env, load_order, archives

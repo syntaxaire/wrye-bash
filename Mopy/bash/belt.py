@@ -31,8 +31,8 @@ import ScriptParser         # generic parser class
 import bass
 import load_order
 from ScriptParser import error
-import wx
 import wx.wizard as wiz     # wxPython wizard class
+from bass import wx
 import bosh, balt, bolt, bush
 from balt import vspace, hspace
 from env import get_file_version

@@ -21,7 +21,7 @@
 #  https://github.com/wrye-bash
 #
 # =============================================================================
-import wx # YAK - sizers
+from bass import wx # YAK - sizers
 from collections import OrderedDict
 # Local
 from . import BashTab, _SashDetailsPanel, MasterList

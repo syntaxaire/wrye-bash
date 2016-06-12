@@ -24,10 +24,10 @@
 
 import re
 import string
-import wx
 
 from .gui_load_order import LoPanel
 from .. import bass, balt, bosh, bolt, load_order
+from ..bass import wx
 from ..balt import TextCtrl, StaticText, vSizer, hSizer, hspacer, Button, \
     RoTextCtrl, bell, Link, toggleButton, SaveButton, CancelButton, hspace, \
     vspace, BaltFrame, Resources, HtmlCtrl
