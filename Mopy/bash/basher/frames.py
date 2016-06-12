@@ -31,6 +31,7 @@ from .. import bass, balt, bosh, bolt, load_order
 from ..balt import TextCtrl, StaticText, Button, \
     RoTextCtrl, bell, Link, toggleButton, SaveButton, CancelButton, \
     BaltFrame, Resources, HtmlCtrl, HBox, VBox, GridBox, checkBox
+from ..bass import wx
 from ..bolt import GPath
 from ..bosh import omods
 
