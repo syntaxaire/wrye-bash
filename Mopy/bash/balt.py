@@ -24,12 +24,15 @@
 
 # Imports ---------------------------------------------------------------------
 import re
+import urllib
+import urlparse
 
 import bass # for dirs - try to avoid
 #--Localization
 #..Handled by bolt, so import that.
 import bolt
 from bolt import GPath, deprint
+from windows import StartURL
 from exception import AbstractError, AccessDeniedError, ArgumentError, \
     BoltError, CancelError, SkipError, StateError
 #--Python
@@ -44,6 +47,15 @@ import wx
 from wx.lib.mixins.listctrl import ListCtrlAutoWidthMixin
 from wx.lib.embeddedimage import PyEmbeddedImage
 import wx.lib.newevent
+import wx.wizard as wiz
+#--wx webview, may not be present on all systems
+try:
+    # raise ImportError
+    import wx.html2 as _wx_html2
+except ImportError:
+    _wx_html2 = None
+    deprint(
+        _(u'wx.WebView is missing, features utilizing HTML will be disabled'))
 
 class Resources:
     #--Icon Bundles
@@ -60,6 +72,8 @@ defSize = wx.DefaultSize
 
 splitterStyle = wx.SP_LIVE_UPDATE # | wx.SP_3DSASH # ugly but
 # makes borders stand out - we need something to that effect
+
+notFound = wx.NOT_FOUND
 
 # wx Types
 wxPoint = wx.Point
@@ -575,6 +589,87 @@ def hsbSizer(parent, box_label=u'', *elements):
     """A horizontal box sizer, but surrounded by a static box."""
     return _aSizer(wx.StaticBoxSizer(wx.StaticBox(parent, label=box_label),
                                      wx.HORIZONTAL), *elements)
+class _SizerWrapper(object):
+    pass
+
+class Box(_SizerWrapper):
+    def __init__(self, vertical=False, parent=None, spacing=0,
+                 default_weight=0, default_grow=False, default_border=0):
+        self._spacing = spacing
+        self._sizer = wx.BoxSizer(wx.VERTICAL if vertical else wx.HORIZONTAL)
+        if parent is not None:
+            parent.SetSizer(self._sizer)
+        self.default_weight = default_weight
+        self.default_grow = default_grow
+        self.default_border = default_border
+
+    def add(self, element, weight=None, grow=None, border=None):
+        if isinstance(element, _SizerWrapper):
+            element = element._sizer
+        if weight is None:
+            weight = self.default_weight
+        if grow is None:
+            grow = self.default_grow
+        if border is None:
+            border = self.default_border
+        flags = wx.ALL | wx.ALIGN_CENTER_VERTICAL
+        if grow:
+            flags |= wx.EXPAND
+        if self._spacing > 0 and not self._sizer.IsEmpty():
+            self._sizer.AddSpacer(self._spacing)
+        self._sizer.Add(element, proportion=weight, flag=flags, border=border)
+
+    def add_many(self, *elements):
+        for element in elements:
+            self.add(element)
+
+    def add_spacer(self, height=4):
+        self._sizer.AddSpacer(height)
+
+    def add_stretch(self, weight=1):
+        self._sizer.AddStretchSpacer(prop=weight)
+
+
+class HBox(Box):
+    def __init__(self, *args, **kwargs):
+        super(HBox, self).__init__(False, *args, **kwargs)
+
+class VBox(Box):
+    def __init__(self, *args, **kwargs):
+        super(VBox, self).__init__(True, *args, **kwargs)
+
+class GridBox(_SizerWrapper):
+    def __init__(self, parent=None, h_spacing=0, v_spacing=0,
+                 default_grow=False, default_border=0):
+        self._sizer = wx.GridBagSizer(hgap=h_spacing, vgap=v_spacing)
+        if parent is not None:
+            parent.SetSizer(self._sizer)
+        self.default_grow = default_grow
+        self.default_border = default_border
+
+    def add(self, col, row, element, grow=None, border=None):
+        if isinstance(element, _SizerWrapper):
+            element = element._sizer
+        if grow is None:
+            grow = self.default_grow
+        if border is None:
+            border = self.default_border
+        flags = wx.ALL
+        if grow:
+            flags |= wx.EXPAND
+        self._sizer.Add(element, (row, col), flag=flags,
+                        border=border)
+
+    def set_stretch(self, col=None, row=None, weight=0):
+        if row is not None:
+            if self._sizer.IsRowGrowable(row):
+                self._sizer.RemoveGrowableRow(row)
+            self._sizer.AddGrowableRow(row, proportion=weight)
+        if col is not None:
+            if self._sizer.IsColGrowable(col):
+                self._sizer.RemoveGrowableCol(col)
+            self._sizer.AddGrowableCol(col, proportion=weight)
+
 
 # Modal Dialogs ---------------------------------------------------------------
 #------------------------------------------------------------------------------
@@ -807,38 +902,107 @@ def showInfo(parent,message,title=_(u'Information'),**kwdargs):
     return askStyled(parent,message,title,wx.OK|wx.ICON_INFORMATION,**kwdargs)
 
 #------------------------------------------------------------------------------
-# If comtypes is not installed, the IE ActiveX control cannot be imported
-try:
-    if wx.Platform != '__WXMSW__':
-        raise ImportError # the import below will crash on linux
-    import wx.lib.iewin as _wx_lib_iewin
-except ImportError:
-    _wx_lib_iewin = None
-    deprint(
-        _(u'Comtypes is missing, features utilizing HTML will be disabled'))
 
-class HtmlCtrl(object):
-
+class HtmlCtrl(wx.Window):
     @staticmethod
-    def html_lib_available(): return _wx_lib_iewin
+    def html_lib_available(): return bool(_wx_html2)
 
     def __init__(self, parent):
-        if not _wx_lib_iewin:
-            self.text_ctrl = RoTextCtrl(parent, special=True)
-            self.prevButton = self.nextButton = None
-            return
-        self.text_ctrl = _wx_lib_iewin.IEHtmlWindow(parent,
-            style=wx.NO_FULL_REPAINT_ON_RESIZE)
-        #--Html Back
-        bitmap = wx.ArtProvider_GetBitmap(wx.ART_GO_BACK, wx.ART_HELP_BROWSER,
-                                          (16, 16))
-        self.prevButton = bitmapButton(parent, bitmap,
-                                       onBBClick=self.text_ctrl.GoBack)
-        #--Html Forward
-        bitmap = wx.ArtProvider_GetBitmap(wx.ART_GO_FORWARD,
-                                          wx.ART_HELP_BROWSER, (16, 16))
-        self.nextButton = bitmapButton(parent, bitmap,
-                                       onBBClick=self.text_ctrl.GoForward)
+        super(HtmlCtrl, self).__init__(parent)
+        # init the fallback/plaintext widget
+        self._text_ctrl = RoTextCtrl(self, autotooltip=False)
+        items = [self._text_ctrl]
+        def _make_button(bitmap_id, callback):
+            return bitmapButton(parent, wx.ArtProvider_GetBitmap(
+                bitmap_id, wx.ART_HELP_BROWSER, (16, 16)), onBBClick=callback)
+        self._prev_button = _make_button(wx.ART_GO_BACK, self.go_back)
+        self._next_button = _make_button(wx.ART_GO_FORWARD, self.go_forward)
+        if _wx_html2:
+            self._html_ctrl = _wx_html2.WebView.New(self)
+            self._html_ctrl.Bind(
+                _wx_html2.EVT_WEBVIEW_LOADED,
+                lambda _event: self._update_buttons(enable_html=True))
+            self._html_ctrl.Bind(
+                _wx_html2.EVT_WEBVIEW_NEWWINDOW,
+                lambda event: self._open_in_external(event.GetURL()))
+            items.append(self._html_ctrl)
+            self._text_ctrl.Disable()
+        main_layout = VBox(self, default_weight=4, default_grow=True)
+        main_layout.add_many(*items)
+        self.switch_to_text() # default to text
+
+    def _open_in_external(self, target_url):
+        # We don't support tabs and windows, just open it in the user's browser
+        # TODO(inf) just webbrowser.open() instead?
+        StartURL(target_url)
+
+    def _update_buttons(self, enable_html):
+        if _wx_html2:
+            self._html_ctrl.Enable(enable_html)
+            self._html_ctrl.Show(enable_html)
+        self._text_ctrl.Enable(not enable_html)
+        self._text_ctrl.Show(not enable_html)
+        self._prev_button.Enable(enable_html and self._html_ctrl.CanGoBack())
+        self._next_button.Enable(enable_html and
+                                 self._html_ctrl.CanGoForward())
+
+    def go_back(self):
+        # Sanity check, shouldn't ever hit this
+        if self._html_ctrl.CanGoBack():
+            self._html_ctrl.GoBack()
+        # HTML must be enabled, otherwise the button wouldn't be enabled
+        self._update_buttons(enable_html=True)
+
+    def go_forward(self):
+        if self._html_ctrl.CanGoForward():
+            self._html_ctrl.GoForward()
+        self._update_buttons(enable_html=True)
+
+    @property
+    def fallback_text(self):
+        return self._text_ctrl.GetValue()
+
+    @fallback_text.setter
+    def fallback_text(self, text_):
+        self._text_ctrl.SetValue(text_)
+
+    def load_text(self, text_):
+        self._text_ctrl.SetValue(text_)
+        self._text_ctrl.SetModified(False)
+        self.switch_to_text()
+
+    def is_text_modified(self):
+        return self._text_ctrl.IsModified()
+
+    def set_text_modified(self, modified):
+        self._text_ctrl.SetModified(modified)
+
+    def set_text_editable(self, editable):
+        # type: (bool) -> None
+        self._text_ctrl.SetEditable(editable)
+
+    def switch_to_html(self):
+        if not _wx_html2: return
+        self._update_buttons(enable_html=True)
+        self.Layout()
+
+    def switch_to_text(self):
+        self._update_buttons(enable_html=False)
+        self.Layout()
+
+    def get_buttons(self):
+        return self._prev_button, self._next_button
+
+    def try_load_html(self, file_path, file_text=u''):
+        # type: (bolt.Path) -> None
+        """Load a HTML file if wx.WebView is available, or load the text."""
+        if _wx_html2:
+            self._html_ctrl.ClearHistory()
+            url = urlparse.urljoin(u'file:', urllib.pathname2url(file_path.s))
+            self._html_ctrl.LoadURL(url)
+            self.switch_to_html()
+        else:
+            self.load_text(file_text)
 
 class _Log(object):
     _settings_key = 'balt.LogMessage'
@@ -915,25 +1079,21 @@ class WryeLog(_Log):
             logPath = _settings.get('balt.WryeLog.temp',
                 bolt.Path.getcwd().join(u'WryeLogTemp.html'))
             convert_wtext_to_html(logPath, logText)
-        if _wx_lib_iewin is None:
-            # Comtypes not available most likely! so do it this way:
-            import webbrowser
-            webbrowser.open(logPath.s)
-            return
         super(WryeLog, self).__init__(parent, logText, title, asDialog,
                                       fixedFont, log_icons)
         #--Text
         self._html_ctrl = HtmlCtrl(self.window)
-        self._html_ctrl.text_ctrl.Navigate(logPath.s,0x2) #--0x2: Clear History
+        self._html_ctrl.try_load_html(file_path=logPath)
         #--Buttons
         gOkButton = OkButton(self.window, onButClick=self.window.Close, default=True)
         if not asDialog:
             self.window.SetBackgroundColour(gOkButton.GetBackgroundColour())
         #--Layout
+        prev_button, next_button = self._html_ctrl.get_buttons()
         self.window.SetSizer(
             vSizer(
-                (self._html_ctrl.text_ctrl,1,wx.EXPAND|wx.ALL^wx.BOTTOM,2),
-                (hSizer(self._html_ctrl.prevButton, self._html_ctrl.nextButton,
+                (self._html_ctrl,1,wx.EXPAND|wx.ALL^wx.BOTTOM,2),
+                (hSizer(prev_button, next_button,
                     hspacer,
                     gOkButton,
                     ),0,wx.ALL|wx.EXPAND,4),
@@ -3143,3 +3303,53 @@ class BaltFrame(wx.Frame):
             _settings[_key + '.pos'] = tuple(self.GetPosition())
             _settings[_key + '.size'] = tuple(self.GetSize())
         self.Destroy()
+
+# Event bindings --------------------------------------------------------------
+class Events(object):
+    RESIZE = 'resize'
+    ACTIVATE = 'activate'
+    CLOSE = 'close'
+    TEXT_CHANGED = 'text_changed'
+    CONTEXT_MENU = 'context_menu'
+    CHAR_KEY_PRESSED = 'char_key_pressed'
+    MOUSE_MOTION = 'mouse_motion'
+    MOUSE_LEAVE_WINDOW = 'mouse_leave_window'
+    MOUSE_LEFT_UP = 'mouse_left_up'
+    MOUSE_LEFT_DOWN = 'mouse_left_down'
+    MOUSE_LEFT_DOUBLECLICK = 'mouse_left_doubleclick'
+    MOUSE_RIGHT_UP = 'mouse_right_up'
+    MOUSE_RIGHT_DOWN = 'mouse_right_down'
+    MOUSE_MIDDLE_UP = 'mouse_middle_up'
+    MOUSE_MIDDLE_DOWN = 'mouse_middle_down'
+    WIZARD_CANCEL = 'wizard_cancel'
+    WIZARD_FINISHED = 'wizard_finished'
+    WIZARD_PAGE_CHANGING = 'wizard_page_changing'
+    # TODO(nycz): possibly too specific stuff here, what do?
+    # also the names here... ugh. needless to say its very wip
+    COMBOBOX_CHOICE = 'combobox_choice'
+    COLORPICKER_CHANGED = 'colorpicker_changed'
+
+_WX_EVENTS = {Events.RESIZE:                wx.EVT_SIZE,
+              Events.ACTIVATE:              wx.EVT_ACTIVATE,
+              Events.CLOSE:                 wx.EVT_CLOSE,
+              Events.TEXT_CHANGED:          wx.EVT_TEXT,
+              Events.CONTEXT_MENU:          wx.EVT_CONTEXT_MENU,
+              Events.CHAR_KEY_PRESSED:      wx.EVT_CHAR,
+              Events.MOUSE_MOTION:          wx.EVT_MOTION,
+              Events.MOUSE_LEAVE_WINDOW:    wx.EVT_LEAVE_WINDOW,
+              Events.MOUSE_LEFT_UP:         wx.EVT_LEFT_UP,
+              Events.MOUSE_LEFT_DOWN:       wx.EVT_LEFT_DOWN,
+              Events.MOUSE_LEFT_DOUBLECLICK:wx.EVT_LEFT_DCLICK,
+              Events.MOUSE_RIGHT_UP:        wx.EVT_RIGHT_UP,
+              Events.MOUSE_RIGHT_DOWN:      wx.EVT_RIGHT_DOWN,
+              Events.MOUSE_MIDDLE_UP:       wx.EVT_MIDDLE_UP,
+              Events.MOUSE_MIDDLE_DOWN:     wx.EVT_MIDDLE_DOWN,
+              Events.WIZARD_CANCEL:         wiz.EVT_WIZARD_CANCEL,
+              Events.WIZARD_FINISHED:       wiz.EVT_WIZARD_FINISHED,
+              Events.WIZARD_PAGE_CHANGING:  wiz.EVT_WIZARD_PAGE_CHANGING,
+              Events.COMBOBOX_CHOICE:       wx.EVT_COMBOBOX,
+              Events.COLORPICKER_CHANGED:   wx.EVT_COLOURPICKER_CHANGED,
+}
+
+def set_event_hook(obj, event, callback):
+    obj.Bind(_WX_EVENTS[event], callback)
