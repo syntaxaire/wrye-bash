@@ -3640,7 +3640,7 @@ class BashStatusBar(DnDStatusBar):
         txt_len = 280 if bush.game.has_esl else 130
         self.SetStatusWidths([self.iconsSize * len(self.buttons), -1, txt_len])
         if refresh_icon_size: self.SetSize((-1, self.iconsSize))
-        self.GetParent().SendSizeEvent()
+        self.PostSizeEventToParent()
         self.OnSize()
 
 #------------------------------------------------------------------------------
