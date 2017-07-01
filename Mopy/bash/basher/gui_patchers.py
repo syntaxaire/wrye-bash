@@ -28,10 +28,10 @@ from operator import itemgetter
 import wx
 # Internal
 from .. import bass, bosh, bush, balt, load_order, bolt, exception
-from ..balt import fill, StaticText, checkBox, Button, \
-    Links, SeparatorLink, CheckLink, Link, VLayout, \
-    HBoxedLayout, Spacer, LayoutOptions
+from ..balt import fill, Links, SeparatorLink, CheckLink, Link
 from ..bolt import GPath
+from ..gui.layouts import HBoxedLayout, VLayout, LayoutOptions, Spacer, TOP
+from ..gui import Button, CheckBox, TextArea, Label
 from ..patcher import patch_files
 
 reCsvExt = re.compile(ur'\.csv$', re.I | re.U)
@@ -69,7 +69,7 @@ class _PatcherPanel(object):
         self.gConfigPanel = wx.Panel(parent, style=self.__class__.style)
         self.main_layout = VLayout(
             default_fill=True, default_weight=1, items=[
-                (StaticText(self.gConfigPanel, fill(self.text, 70)),
+                (Label(self.gConfigPanel, fill(self.text, 70)),
                  LayoutOptions(weight=0))])
         self.main_layout.apply_to(self.gConfigPanel)
         config_layout.add(self.gConfigPanel)
@@ -156,11 +156,11 @@ class _AliasesPatcherPanel(_PatcherPanel):
         if self.gConfigPanel: return self.gConfigPanel
         gConfigPanel = super(_AliasesPatcherPanel, self).GetConfigPanel(parent,
                                                                         config_layout, gTipText)
-        #gExample = StaticText(gConfigPanel,
+        #gExample = Label(gConfigPanel,
         #    _(u"Example Mod 1.esp >> Example Mod 1.2.esp"))
         #--Aliases Text
-        self.gAliases = balt.TextCtrl(gConfigPanel, multiline=True,
-                                      onKillFocus=self.OnEditAliases)
+        self.gAliases = TextArea(gConfigPanel)
+        self.gAliases.bind('lose_focus', self.OnEditAliases)
         self.SetAliasText()
         #--Sizing
         self.main_layout.add((self.gAliases,
@@ -169,11 +169,11 @@ class _AliasesPatcherPanel(_PatcherPanel):
 
     def SetAliasText(self):
         """Sets alias text according to current aliases."""
-        self.gAliases.SetValue(u'\n'.join([
-            u'%s >> %s' % (key.s,value.s) for key,value in sorted(self.aliases.items())]))
+        self.gAliases.text_content = u'\n'.join([
+            u'%s >> %s' % (key.s,value.s) for key,value in sorted(self.aliases.items())])
 
     def OnEditAliases(self):
-        aliases_text = self.gAliases.GetValue()
+        aliases_text = self.gAliases.text_content
         self.aliases.clear()
         for line in aliases_text.split(u'\n'):
             fields = map(string.strip,line.split(u'>>'))
@@ -236,20 +236,20 @@ class _ListPatcherPanel(_PatcherPanel):
             side_button_layout = None
             self.SetItems(self.getAutoItems())
         else:
-            self.gAuto = checkBox(gConfigPanel, _(u'Automatic'),
-                                  onCheck=self.OnAutomatic,
+            self.gAuto = CheckBox(gConfigPanel, _(u'Automatic'),
+                                  on_toggle=self.OnAutomatic,
                                   checked=self.autoIsChecked)
-            self.gAdd = Button(gConfigPanel, _(u'Add'), onButClick=self.OnAdd)
+            self.gAdd = Button(gConfigPanel, _(u'Add'), on_click=self.OnAdd)
             self.gRemove = Button(gConfigPanel, _(u'Remove'),
-                                  onButClick=self.OnRemove)
-            self.OnAutomatic()
+                                  on_click=self.OnRemove)
+            self.OnAutomatic(self.autoIsChecked)
             side_button_layout = VLayout(spacing=4, items=[
                 self.gAuto, Spacer(4), self.gAdd, self.gRemove])
         #--Layout
         self.main_layout.add(
             (HBoxedLayout(gConfigPanel, title=self.__class__.listLabel, items=[
                 (self.gList, LayoutOptions(fill=True, weight=1)),
-                (side_button_layout, LayoutOptions(v_align=balt.TOP)),
+                (side_button_layout, LayoutOptions(v_align=TOP)),
                 (self._get_select_layout(), LayoutOptions(fill=True))]),
              LayoutOptions(fill=True, weight=1)))
         return gConfigPanel
@@ -257,9 +257,9 @@ class _ListPatcherPanel(_PatcherPanel):
     def _get_select_layout(self):
         if not self.selectCommands: return None
         self.gSelectAll = Button(self.gConfigPanel, _(u'Select All'),
-                                 onButClick=self.SelectAll)
+                                 on_click=self.SelectAll)
         self.gDeselectAll = Button(self.gConfigPanel, _(u'Deselect All'),
-                                   onButClick=self.DeselectAll)
+                                   on_click=self.DeselectAll)
         return VLayout(spacing=4, items=[Spacer(4), self.gSelectAll,
                                          self.gDeselectAll])
 
@@ -309,11 +309,11 @@ class _ListPatcherPanel(_PatcherPanel):
         elif ensureEnabled:
             self._EnsurePatcherEnabled()
 
-    def OnAutomatic(self):
+    def OnAutomatic(self, is_checked):
         """Automatic checkbox changed."""
-        self.autoIsChecked = self.gAuto.IsChecked()
-        self.gAdd.Enable(not self.autoIsChecked)
-        self.gRemove.Enable(not self.autoIsChecked)
+        self.autoIsChecked = is_checked
+        self.gAdd.enabled = not self.autoIsChecked
+        self.gRemove.enabled = not self.autoIsChecked
         if self.autoIsChecked:
             self.SetItems(self.getAutoItems())
 
@@ -501,9 +501,9 @@ class _TweakPatcherPanel(_ChoiceMenuMixin, _PatcherPanel):
     def _get_tweak_select_layout(self, ):
         if self.selectCommands:
             self.gTweakSelectAll = Button(self.gConfigPanel,
-                _(u'Select All'), onButClick=self.TweakSelectAll)
+                                          _(u'Select All'), on_click=self.TweakSelectAll)
             self.gTweakDeselectAll = Button(self.gConfigPanel,
-                _(u'Deselect All'), onButClick=self.TweakDeselectAll)
+                                            _(u'Deselect All'), on_click=self.TweakDeselectAll)
             tweak_select_layout = VLayout(spacing=4, items=[
                 Spacer(4), self.gTweakSelectAll, self.gTweakDeselectAll])
         else: tweak_select_layout = None
@@ -551,7 +551,7 @@ class _TweakPatcherPanel(_ChoiceMenuMixin, _PatcherPanel):
     def OnMouse(self, event):
         """Check mouse motion to detect right click event."""
         if event.Leaving():
-            self.gTipText.SetLabel(u'')
+            self.gTipText.label_text = u''
             self.mouse_pos = None
             event.Skip()
         elif event.Moving():
@@ -563,9 +563,9 @@ class _TweakPatcherPanel(_ChoiceMenuMixin, _PatcherPanel):
                 tip = 0 <= mouseItem < len(self.tweaks) and self.tweaks[
                     mouseItem].tip
                 if tip:
-                    self.gTipText.SetLabel(tip)
+                    self.gTipText.label_text = tip
                 else:
-                    self.gTipText.SetLabel(u'')
+                    self.gTipText.label_text = u''
             event.Skip()
         else:
             super(_TweakPatcherPanel, self).OnMouse(event)
