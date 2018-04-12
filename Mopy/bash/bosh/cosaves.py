@@ -1595,7 +1595,8 @@ def get_cosave_types(game_fsName, game_ess_ext):
         xSECosave._pluggy_signature = 0x2330
         _xSEHeader.savefile_tag = u'OBSE'
         cosave_types.append(PluggyCosave)
-    elif game_fsName in (u'Enderal', u'Skyrim', u'Skyrim Special Edition'):
+    elif game_fsName in (u'Enderal', u'Skyrim', u'Skyrim Special Edition',
+                         u'Skyrim VR'):
         xSECosave._xse_signature = 0x0
         _xSEHeader.savefile_tag = u'SKSE'
     elif game_fsName in (u'Fallout4', u'Fallout4VR'):
