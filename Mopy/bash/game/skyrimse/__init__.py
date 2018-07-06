@@ -57,7 +57,11 @@ class SkyrimSEGameInfo(SkyrimGameInfo):
     espm_extensions = {u'.esp', u'.esm', u'.esl'}
     has_achlist = True
 
-    allTags = {u'Deactivate', u'Delev', u'Invent', u'NoMerge', u'Relev'}
+    allTags = {u'C.Acoustic', u'C.Climate', u'C.Encounter', u'C.ImageSpace',
+               u'C.Light', u'C.Location', u'C.SkyLighting', u'C.Music',
+               u'C.Name', u'C.Owner', u'C.RecordFlags', u'C.Regions',
+               u'C.Water', u'Deactivate', u'Delev', u'Filter', u'Graphics',
+               u'Invent', u'NoMerge', u'Relev', u'Sound', u'Stats', u'Names', }
 
     patchers = (
         u'GmstTweaker', u'ImportInventory', u'ListsMerger', u'PatchMerger',
