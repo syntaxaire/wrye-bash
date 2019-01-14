@@ -43,8 +43,13 @@ __all__ = ['Settings_BackupSettings', 'Settings_RestoreSettings',
            'Settings_UseAltName', 'Settings_Deprint',
            'Settings_DumpTranslator', 'Settings_UAC']
 
-def _bassLang(): return bass.language if bass.language else \
-    locale.getlocale()[0].split('_', 1)[0]
+def _bassLang():
+    try:
+        return bass.language if bass.language else \
+            locale.getlocale()[0].split('_', 1)[0]
+    except AttributeError: # locale.getlocale()[0] is None
+        return u'English'
+
 #------------------------------------------------------------------------------
 # Settings Links --------------------------------------------------------------
 #------------------------------------------------------------------------------
