@@ -152,7 +152,7 @@ def dump_environment():
             u'wxPython not found',
         # Standalone: stdout will actually be pointing to stderr, which has no
         # 'encoding' attribute
-        u'input encoding: %s; output encoding: %s; locale: %s' % (
+        u'input encoding: %s; output encoding: %s; default locale: %s' % (
             sys.stdin.encoding, getattr(sys.stdout, 'encoding', None),
             locale.getdefaultlocale()
         ),
