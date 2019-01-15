@@ -336,8 +336,10 @@ def dumpTranslator(outPath, lang, *files):
     return outTxt
 
 def initTranslator(lang=None, path=None):
-    # if locale.getlocale() == (None,None):
-    #     locale.setlocale(locale.LC_ALL,u'')
+    if locale.getlocale() == (None,None):
+        # locale.setlocale(locale.LC_ALL,u'')
+        import wx
+        wx.Locale(wx.LANGUAGE_DEFAULT)
     if not lang:
         try:
             getlocale = locale.getlocale()
