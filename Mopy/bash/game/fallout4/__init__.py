@@ -124,6 +124,11 @@ class Fallout4GameInfo(GameInfo):
         canEditHeader = True
         validHeaderVersions = (0.95,)
 
+        @staticmethod
+        def needs_ONAM(plugin):
+            # Fallout 4 always needs ONAM data
+            return True
+
     allTags = {u'Delev', u'Relev'}
 
     patchers = (u'ListsMerger',)

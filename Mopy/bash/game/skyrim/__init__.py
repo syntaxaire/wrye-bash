@@ -138,6 +138,11 @@ class SkyrimGameInfo(GameInfo):
         canEditHeader = True
         validHeaderVersions = (0.94, 1.70,)
 
+        @staticmethod
+        def needs_ONAM(plugin):
+            # Skyrim (LE & SE) need ONAM only for masters
+            return plugin.isEsm()
+
     allTags = {u'C.Acoustic', u'C.Climate', u'C.Encounter', u'C.ImageSpace',
                u'C.Light', u'C.Location', u'C.SkyLighting', u'C.Music',
                u'C.Name', u'C.Owner', u'C.RecordFlags', u'C.Regions',

@@ -212,6 +212,15 @@ class GameInfo(object):
             ((u'Strings',), u'%(body)s_%(language)s.ILSTRINGS'),
         ]
 
+        @staticmethod
+        def needs_ONAM(plugin):
+            """
+            Determines whether or not a plugin needs ONAM.
+
+            :param plugin: The plugin to check (type: ModInfo).
+            """
+            return False
+
     # Bash Tags supported by this game
     allTags = set()
 
