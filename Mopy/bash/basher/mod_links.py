@@ -1605,6 +1605,7 @@ class Mod_FlipSelf(_Esm_Flip):
         for modInfo in self.iselected_infos():
             header = modInfo.header
             header.flags1.esm = not header.flags1.esm
+            modInfo.update_ONAM()
             modInfo.writeHeader()
         self._esm_flip_refresh(self._is_esm, self.selected)
 

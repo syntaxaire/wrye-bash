@@ -623,6 +623,28 @@ class ModInfo(FileInfo):
                 modInfos.sse_form43.add(self.name)
         self._reset_masters()
 
+    def update_ONAM(self):
+        """
+        Adds or strips ONAM data from this plugin file, based on
+        GameInfo.needs_ONAM().
+
+        Note that this function only modifies the header in-memory - it does
+        not write the result to disk. This is done to allow other changes (e.g.
+        ESM flagging) to be made at the same time without having to worry about
+        the order of those changes. Call writeHeader() afterwards to write out
+        all changes.
+        """
+        # TODO Be on the lookout for aers' work on ONAMs
+        # Depending on how ElminsterAU and aers solve Skyrim's ONAM woes, we
+        # may want to add an always-ONAM mode to Skyrim as well
+        if bush.game.esp.needs_ONAM(self):
+            # TODO Calculate ONAM data and add it
+            pass
+        else:
+            # Strip out all ONAM data
+            self.header.overrides = []
+        self.header.setChanged()
+
     def writeHeader(self):
         """Write Header. Actually have to rewrite entire file."""
         filePath = self.getPath()
