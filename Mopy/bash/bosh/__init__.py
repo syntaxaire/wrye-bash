@@ -642,14 +642,21 @@ class ModInfo(FileInfo):
         # may want to add an always-ONAM mode to Skyrim as well
         if bush.game.esp.needs_onam(self):
             if not self.header.overrides or force_rewrite:
+                collected_onam = []
                 # Load all records that may need ONAM data
-                # TODO(inf) Investigate if FO4 needs any others here
-                # Also, NAVM, PGRE and PHZD are currently treated as top-level
-                # records, which is obviously wrong
-                cell_loader = LoadFactory(False, 'ACHR', 'LAND', 'NAVM',
-                                          'PGRE', 'PHZD', 'REFR')
+                cell_loader = LoadFactory(False, 'CELL', 'WRLD')
                 mod_file = ModFile(self, cell_loader)
-                mod_file.load(do_unpack=True, loadStrings=False)
+                mod_file.load(do_unpack=True)
+                # Scan CELL children for ONAM candidates
+                if 'CELL' in mod_file.tops:
+                    onam = self._calc_onam(mod_file.tops['CELL'].cellBlocks)
+                    collected_onam += onam
+                # Do the same thing for WRLD
+                if 'WRLD' in mod_file.tops:
+                    for worldspace in mod_file.tops['WRLD'].worldBlocks:
+                        onam = self._calc_onam(worldspace.cellBlocks)
+                        collected_onam += onam
+                self.header.overrides = collected_onam
                 self.header.setChanged()
         else:
             if self.header.overrides or force_rewrite:
@@ -849,6 +856,22 @@ class ModInfo(FileInfo):
         as a list of path components.
         """
         return self.dir.join(*resource_path).join(self.name).exists()
+
+    def _calc_onam(self, cell_blocks):
+        """
+        Returns a list of ONAM data for the specified list of cell blocks.
+
+        :param cell_blocks: The cell blocks to calculate ONAM for (type:
+        list[MobCell]).
+        :return: A list of FormIDs, representing the ONAM data for the
+        specified cell blocks (type: list[int]).
+        """
+        ret_onam = []
+        for cell_record in cell_blocks:
+            # Only temp records are important
+            for temp_record in cell_record.temp:
+                # TODO Check if override, and if so, add fid to ret_onam
+                pass
 
 #------------------------------------------------------------------------------
 from .ini_files import IniFile, OBSEIniFile, DefaultIniFile, OblivionIni, \
