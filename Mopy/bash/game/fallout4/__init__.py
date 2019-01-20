@@ -118,7 +118,7 @@ class Fallout4GameInfo(GameInfo):
         validHeaderVersions = (0.95,)
 
         @staticmethod
-        def needs_ONAM(plugin):
+        def needs_onam(plugin):
             # Fallout 4 always needs ONAM data
             return True
 

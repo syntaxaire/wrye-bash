@@ -133,7 +133,7 @@ class SkyrimGameInfo(GameInfo):
         validHeaderVersions = (0.94, 1.70,)
 
         @staticmethod
-        def needs_ONAM(plugin):
+        def needs_onam(plugin):
             # Skyrim (LE & SE) need ONAM only for masters
             return plugin.isEsm()
 

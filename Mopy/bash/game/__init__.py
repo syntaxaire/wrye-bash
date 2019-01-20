@@ -194,7 +194,7 @@ class GameInfo(object):
         ]
 
         @staticmethod
-        def needs_ONAM(plugin):
+        def needs_onam(plugin):
             """
             Determines whether or not a plugin needs ONAM.
 
