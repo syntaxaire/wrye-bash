@@ -623,7 +623,7 @@ class ModInfo(FileInfo):
                 modInfos.sse_form43.add(self.name)
         self._reset_masters()
 
-    def update_ONAM(self, force_rewrite=False):
+    def update_onam(self, force_rewrite=False):
         """
         Adds or strips ONAM data from this plugin file, based on
         GameInfo.needs_ONAM().
@@ -640,7 +640,7 @@ class ModInfo(FileInfo):
         # TODO(inf) Be on the lookout for aers' work on ONAMs
         # Depending on how ElminsterAU and aers solve Skyrim's ONAM woes, we
         # may want to add an always-ONAM mode to Skyrim as well
-        if bush.game.esp.needs_ONAM(self):
+        if bush.game.esp.needs_onam(self):
             if not self.header.overrides or force_rewrite:
                 # Load all records that may need ONAM data
                 # TODO(inf) Investigate if FO4 needs any others here
