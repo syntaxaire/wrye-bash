@@ -56,7 +56,7 @@ from ..cint import CBashApi
 from ..exception import AbstractError, ArgumentError, BoltError, BSAError, \
     CancelError, FileError, ModError, PluginsFullError, SaveFileError, \
     SaveHeaderError, SkipError, StateError
-from ..parsers import ModFile
+from ..parsers import LoadFactory, ModFile
 
 # Singletons, Constants -------------------------------------------------------
 #--Constants
@@ -623,7 +623,7 @@ class ModInfo(FileInfo):
                 modInfos.sse_form43.add(self.name)
         self._reset_masters()
 
-    def update_ONAM(self):
+    def update_ONAM(self, force_rewrite=False):
         """
         Adds or strips ONAM data from this plugin file, based on
         GameInfo.needs_ONAM().
@@ -633,17 +633,28 @@ class ModInfo(FileInfo):
         ESM flagging) to be made at the same time without having to worry about
         the order of those changes. Call writeHeader() afterwards to write out
         all changes.
+
+        :param force_rewrite: If set to True, always rewrite the ONAMs, even if
+        their presence already matches GameInfo.needs_ONAM().
         """
-        # TODO Be on the lookout for aers' work on ONAMs
+        # TODO(inf) Be on the lookout for aers' work on ONAMs
         # Depending on how ElminsterAU and aers solve Skyrim's ONAM woes, we
         # may want to add an always-ONAM mode to Skyrim as well
         if bush.game.esp.needs_ONAM(self):
-            # TODO Calculate ONAM data and add it
-            pass
+            if not self.header.overrides or force_rewrite:
+                # Load all records that may need ONAM data
+                # TODO(inf) Investigate if FO4 needs any others here
+                # Also, NAVM, PGRE and PHZD are currently treated as top-level
+                # records, which is obviously wrong
+                cell_loader = LoadFactory(False, 'ACHR', 'LAND', 'NAVM',
+                                          'PGRE', 'PHZD', 'REFR')
+                mod_file = ModFile(self, cell_loader)
+                mod_file.load(do_unpack=True, loadStrings=False)
+                self.header.setChanged()
         else:
-            # Strip out all ONAM data
-            self.header.overrides = []
-        self.header.setChanged()
+            if self.header.overrides or force_rewrite:
+                self.header.overrides = []
+                self.header.setChanged()
 
     def writeHeader(self):
         """Write Header. Actually have to rewrite entire file."""
