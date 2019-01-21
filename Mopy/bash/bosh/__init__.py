@@ -626,7 +626,7 @@ class ModInfo(FileInfo):
     def update_onam(self, force_rewrite=False):
         """
         Adds or strips ONAM data from this plugin file, based on
-        GameInfo.needs_ONAM().
+        GameInfo.needs_onam().
 
         Note that this function only modifies the header in-memory - it does
         not write the result to disk. This is done to allow other changes (e.g.
@@ -635,7 +635,7 @@ class ModInfo(FileInfo):
         all changes.
 
         :param force_rewrite: If set to True, always rewrite the ONAMs, even if
-        their presence already matches GameInfo.needs_ONAM().
+        their presence already matches GameInfo.needs_onam().
         """
         # TODO(inf) Be on the lookout for aers' work on ONAMs
         # Depending on how ElminsterAU and aers solve Skyrim's ONAM woes, we

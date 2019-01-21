@@ -140,7 +140,7 @@ class SkyrimGameInfo(GameInfo):
 
         @staticmethod
         def needs_onam(plugin):
-            # Skyrim (LE & SE) need ONAM only for masters
+            # Skyrim (LE & SE) needs ONAM only for masters
             return plugin.isEsm()
 
     allTags = {u'C.Acoustic', u'C.Climate', u'C.Encounter', u'C.ImageSpace',
