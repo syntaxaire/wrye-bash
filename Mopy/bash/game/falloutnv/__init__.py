@@ -104,6 +104,11 @@ class FalloutNVGameInfo(GameInfo):
         validHeaderVersions = (0.94, 1.32, 1.33, 1.34)
         stringsFiles = []
 
+        @staticmethod
+        def needs_onam(plugin):
+            # Fallout NV needs ONAM only for masters
+            return plugin.isEsm()
+
     #--Bash Tags supported by this game
     # 'Body-F', 'Body-M', 'Body-Size-M', 'Body-Size-F', 'C.Climate', 'C.Light',
     # 'C.Music', 'C.Name', 'C.RecordFlags', 'C.Owner', 'C.Water','Deactivate',

@@ -106,6 +106,11 @@ class Fallout3GameInfo(GameInfo):
         validHeaderVersions = (0.85, 0.94)
         stringsFiles = []
 
+        @staticmethod
+        def needs_onam(plugin):
+            # Fallout 3 needs ONAM only for masters
+            return plugin.isEsm()
+
     #--Tags supported by this game
     # 'Body-F', 'Body-M', 'Body-Size-M', 'Body-Size-F', 'C.Climate', 'C.Light',
     # 'C.Music', 'C.Name', 'C.RecordFlags', 'C.Owner', 'C.Water','Deactivate',
