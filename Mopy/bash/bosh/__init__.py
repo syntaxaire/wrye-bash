@@ -644,18 +644,18 @@ class ModInfo(FileInfo):
             if not self.header.overrides or force_rewrite:
                 collected_onam = []
                 # Load all records that may need ONAM data
-                cell_loader = LoadFactory(False, 'CELL', 'WRLD')
+                cell_loader = LoadFactory(True, 'CELL', 'WRLD')
                 mod_file = ModFile(self, cell_loader)
                 mod_file.load(do_unpack=True)
                 # Scan CELL children for ONAM candidates
                 if 'CELL' in mod_file.tops:
                     onam = self._calc_onam(mod_file.tops['CELL'].cellBlocks)
-                    collected_onam += onam
+                    #collected_onam += onam
                 # Do the same thing for WRLD
                 if 'WRLD' in mod_file.tops:
                     for worldspace in mod_file.tops['WRLD'].worldBlocks:
                         onam = self._calc_onam(worldspace.cellBlocks)
-                        collected_onam += onam
+                        #collected_onam += onam
                 self.header.overrides = collected_onam
                 self.header.setChanged()
         else:

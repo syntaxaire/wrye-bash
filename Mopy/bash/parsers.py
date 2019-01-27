@@ -3885,7 +3885,8 @@ class LoadFactory:
     def getCellTypeClass(self):
         """Returns type_class dictionary for cell objects."""
         if not self.cellType_class:
-            types = ('REFR','ACHR','ACRE','PGRD','LAND','CELL','ROAD')
+            # TODO Hack to get them to load - this should really be game-specific!
+            types = ('REFR','ACHR','ACRE','PGRD','LAND','CELL','ROAD','NAVM','PGRE','PHZD')
             getterRecClass = self.getRecClass
             self.cellType_class.update((x,getterRecClass(x)) for x in types)
         return self.cellType_class
