@@ -3894,9 +3894,10 @@ class LoadFactory:
     def getUnpackCellBlocks(self,topType):
         """Returns whether cell blocks should be unpacked or not. Only relevant
         if CELL and WRLD top types are expanded."""
+        # TODO Hack for debugging - should be game-specific
         return (
             self.keepAll or
-            (self.recTypes & {'REFR', 'ACHR', 'ACRE', 'PGRD', 'LAND'}) or
+            (self.recTypes & {'REFR','ACHR','ACRE','PGRD','LAND','NAVM','PGRE','PHZD'}) or
             (topType == 'WRLD' and 'LAND' in self.recTypes))
 
     def getTopClass(self, top_rec_type):

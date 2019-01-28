@@ -644,18 +644,30 @@ class ModInfo(FileInfo):
             if not self.header.overrides or force_rewrite:
                 collected_onam = []
                 # Load all records that may need ONAM data
-                cell_loader = LoadFactory(True, 'CELL', 'WRLD')
+                # TODO Hack for debugging - should be game-specific
+                cell_loader = LoadFactory(False,'CELL','WRLD','REFR','ACHR',
+                                          'NAVM','PGRE','PHZD','PGRD','ROAD')
                 mod_file = ModFile(self, cell_loader)
                 mod_file.load(do_unpack=True)
+                # Load all masters of this plugin
+                mod_masters = mod_file.tes4.masters
+                master_files = []
+                for master in mod_masters:
+                    current_master = ModFile(ModInfo(self.dir.join((master))),
+                                             cell_loader)
+                    current_master.load(do_unpack=True)
+                    master_files.append(current_master)
                 # Scan CELL children for ONAM candidates
                 if 'CELL' in mod_file.tops:
-                    onam = self._calc_onam(mod_file.tops['CELL'].cellBlocks)
-                    #collected_onam += onam
+                    onam = self._calc_onam(mod_file.tops['CELL'].cellBlocks,
+                                           master_files, 'CELL')
+                    collected_onam += onam
                 # Do the same thing for WRLD
                 if 'WRLD' in mod_file.tops:
                     for worldspace in mod_file.tops['WRLD'].worldBlocks:
-                        onam = self._calc_onam(worldspace.cellBlocks)
-                        #collected_onam += onam
+                        onam = self._calc_onam(worldspace.cellBlocks,
+                                               master_files, 'WRLD',worldspace)
+                        collected_onam += onam
                 self.header.overrides = collected_onam
                 self.header.setChanged()
         else:
@@ -857,21 +869,48 @@ class ModInfo(FileInfo):
         """
         return self.dir.join(*resource_path).join(self.name).exists()
 
-    def _calc_onam(self, cell_blocks):
+    def _calc_onam(self, cell_blocks, masters, top_used, worldspace_name=None):
         """
         Returns a list of ONAM data for the specified list of cell blocks.
 
         :param cell_blocks: The cell blocks to calculate ONAM for (type:
         list[MobCell]).
+        :param masters: List of loaded ModInfo objects for the masters of the
+        plugin.
+        :param top_used: The top GRUP that this the cell blocks came from.
+        :param worldspace_name: If top_used is 'WRLD', this should be the name
+        of the worldspace from which the cell blocks came.
         :return: A list of FormIDs, representing the ONAM data for the
         specified cell blocks (type: list[int]).
         """
         ret_onam = []
         for cell_record in cell_blocks:
-            # Only temp records are important
+            # Only temp records need ONAM
             for temp_record in cell_record.temp:
-                # TODO Check if override, and if so, add fid to ret_onam
-                pass
+                # These are all local for performance
+                fid = temp_record.fid
+                mod_id = int(fid >> 24)
+                if mod_id < len(masters):
+                    # This is either an injected record or an overriden one
+                    # Check which one it is, since only overrides need ONAM
+                    master = masters[mod_id]
+                    obj_id = int(fid & 0x00FFFFFFL)
+                    master_fid = long(obj_id) | (long(len(master.tes4.masters)) << 24)
+                    if top_used in master.tops:
+                        if top_used == 'WRLD':
+                            # Look for the matching worldspace in the master
+                            worlds = master.WRLD
+                            pass
+                        # TODO This is not enough - we need instruction on how to get to the cell block in the master
+                        # Idea:
+                        #  cell_rec = masters.CELL
+                        #  if not cell_rec.id_cellBlock:
+                        #      cell_rec.indexRecords()
+                        #
+                        elif master.tops[top_used].getRecord(master_fid):
+                            # This is an overriden temp record - mark for ONAM
+                            ret_onam.append(fid)
+        return ret_onam
 
 #------------------------------------------------------------------------------
 from .ini_files import IniFile, OBSEIniFile, DefaultIniFile, OblivionIni, \

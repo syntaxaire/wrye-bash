@@ -414,7 +414,8 @@ class MobCell(MobBase):
                                u'group.' % recType)
             elif not recClass:
                 insSeek(header.size,1)
-            elif recType in ('REFR','ACHR','ACRE'):
+            # TODO Hack for debugging - this needs to be game-specific
+            elif recType in ('REFR','ACHR','ACRE','NAVM','PGRE','PHZD'):
                 record = recClass(header,ins,True)
                 if   groupType ==  8: persistentAppend(record)
                 elif groupType ==  9: tempAppend(record)
