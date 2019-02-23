@@ -71,6 +71,21 @@ class FalloutNVGameInfo(Fallout3GameInfo):
         canCBash = False # True?
         validHeaderVersions = (0.94, 1.32, 1.33, 1.34)
 
+#    TODO(inf) Copy-pasted like this from the original source: remove or enable
+#    export_links = Fallout3GameInfo.export_links + [
+#        u'Mod_Factions_Export',
+#        u'Mod_IngredientDetails_Export',
+#        u'Mod_Scripts_Export',
+#        u'Mod_SpellRecords_Export',
+#    ]
+#    import_links = Fallout3GameInfo.import_links + [
+#        u'Mod_IngredientDetails_Import',
+#        u'Mod_Scripts_Import',
+#        u'SeparatorLink',
+#        u'Mod_Face_Import',
+#        u'Mod_Fids_Replace',
+#    ]
+
     #--Bash Tags supported by this game
     # 'Body-F', 'Body-M', 'Body-Size-M', 'Body-Size-F', 'C.Climate', 'C.Light',
     # 'C.Music', 'C.Name', 'C.RecordFlags', 'C.Owner', 'C.Water','Deactivate',

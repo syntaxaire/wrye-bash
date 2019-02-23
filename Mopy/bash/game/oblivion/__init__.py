@@ -128,6 +128,36 @@ class OblivionGameInfo(GameInfo):
         validHeaderVersions = (0.8,1.0)
         stringsFiles = []
 
+    export_links = GameInfo.export_links + [
+        u'Mod_Factions_Export',
+        u'Mod_FullNames_Export',
+        u'Mod_ActorLevels_Export',
+        u'CBash_Mod_MapMarkers_Export',
+        u'Mod_Prices_Export',
+        u'Mod_FactionRelations_Export',
+        u'Mod_IngredientDetails_Export',
+        u'Mod_Scripts_Export',
+        u'Mod_SigilStoneDetails_Export',
+        u'Mod_SpellRecords_Export',
+        u'Mod_Stats_Export',
+    ]
+    import_links = GameInfo.import_links + [
+        u'Mod_Factions_Import',
+        u'Mod_FullNames_Import',
+        u'Mod_ActorLevels_Import',
+        u'CBash_Mod_MapMarkers_Import',
+        u'Mod_Prices_Import',
+        u'Mod_FactionRelations_Import',
+        u'Mod_IngredientDetails_Import',
+        u'Mod_Scripts_Import',
+        u'Mod_SigilStoneDetails_Import',
+        u'Mod_SpellRecords_Import',
+        u'Mod_Stats_Import',
+        u'SeparatorLink',
+        u'Mod_Face_Import',
+        u'Mod_Fids_Replace',
+    ]
+
     allTags = {u'Body-F', u'Body-M', u'Body-Size-M', u'Body-Size-F',
                u'C.Climate', u'C.Light', u'C.Music', u'C.Name',
                u'C.Owner', u'C.RecordFlags', u'C.Regions', u'C.Water',

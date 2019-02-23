@@ -105,6 +105,19 @@ class Fallout3GameInfo(GameInfo):
         validHeaderVersions = (0.85, 0.94)
         stringsFiles = []
 
+    export_links = GameInfo.export_links + [
+        u'Mod_FullNames_Export',
+        u'Mod_Prices_Export',
+        u'Mod_Stats_Export',
+        u'Mod_FactionRelations_Export',
+    ]
+    import_links = GameInfo.import_links + [
+        u'Mod_FullNames_Import',
+        u'Mod_Prices_Import',
+        u'Mod_Stats_Import',
+        u'Mod_FactionRelations_Import',
+    ]
+
     #--Tags supported by this game
     # 'Body-F', 'Body-M', 'Body-Size-M', 'Body-Size-F', 'C.Climate', 'C.Light',
     # 'C.Music', 'C.Name', 'C.RecordFlags', 'C.Owner', 'C.Water','Deactivate',

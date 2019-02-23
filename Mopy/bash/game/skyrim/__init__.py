@@ -143,6 +143,17 @@ class SkyrimGameInfo(GameInfo):
         canEditHeader = True
         validHeaderVersions = (0.94, 1.70,)
 
+    export_links = GameInfo.export_links + [
+        u'Mod_FullNames_Export',
+        u'Mod_Prices_Export',
+        u'Mod_Stats_Export',
+    ]
+    import_links = GameInfo.import_links + [
+        u'Mod_FullNames_Import',
+        u'Mod_Prices_Import',
+        u'Mod_Stats_Import',
+    ]
+
     allTags = {u'C.Acoustic', u'C.Climate', u'C.Encounter', u'C.ForceHideLand',
                u'C.ImageSpace', u'C.Light', u'C.Location', u'C.LockList',
                u'C.MaxHeight', u'C.Music', u'C.Name', u'C.Owner',

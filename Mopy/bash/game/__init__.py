@@ -246,6 +246,21 @@ class GameInfo(object):
             ((u'Strings',), u'%(body)s_%(language)s.ILSTRINGS'),
         ]
 
+    # Import / Export:
+    # Names of link classes to be appended to the export menu. SeparatorLink
+    # can also be used to create separators
+    export_links = [
+        u'Mod_EditorIds_Export',
+        u'CBash_Mod_CellBlockInfo_Export',
+#        u'Mod_ItemData_Export',
+    ]
+    # Names of link classes to be appended to the import menu - similar to
+    # export_links above
+    import_links = [
+        u'Mod_EditorIds_Import',
+#        u'Mod_ItemData_Import',
+    ]
+
     # Bash Tags supported by this game
     allTags = set()
 
