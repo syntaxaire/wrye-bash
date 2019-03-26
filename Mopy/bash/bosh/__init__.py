@@ -1839,6 +1839,22 @@ class ModInfos(FileInfos):
         return u'%02X' % (load_order.cached_active_index(mod),) \
             if load_order.cached_is_active(mod) else u''
 
+    @staticmethod
+    def final_hex_index(mod, mod_infos):
+        mod_info = mod_infos[mod]
+        if not load_order.cached_is_active(mod):
+            return u''
+        elif mod_info.is_esl():
+            lower_mods = [mod_infos[lower_mod] for lower_mod in
+                          load_order.cached_lower_loading_espms(mod)]
+            return u'FE %03X' % len([lower_mod for lower_mod in lower_mods if
+                                     lower_mod.is_esl()])
+        else:
+            lower_mods = [mod_infos[lower_mod] for lower_mod in
+                          load_order.cached_lower_loading_espms(mod)]
+            return u'%02X' % len([lower_mod for lower_mod in lower_mods if
+                                  not lower_mod.is_esl()])
+
     def masterWithVersion(self, master_name):
         if master_name == u'Oblivion.esm' and self.voCurrent:
             master_name += u' [' + self.voCurrent + u']'

@@ -397,6 +397,8 @@ def InitModLinks():
         sortMenu.links.append(Files_SortBy('Group'))
         sortMenu.links.append(Files_SortBy('Installer'))
         sortMenu.links.append(Files_SortBy('Load Order'))
+        if bush.game.has_esl:
+            sortMenu.links.append(Files_SortBy('Indices'))
         sortMenu.links.append(Files_SortBy('Modified'))
         sortMenu.links.append(Files_SortBy('Rating'))
         sortMenu.links.append(Files_SortBy('Size'))

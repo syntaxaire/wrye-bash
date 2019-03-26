@@ -753,20 +753,26 @@ class ModList(_ModsUIList):
         'Group'     : lambda self, a: self._get(a)('group', u''),
         'Installer' : lambda self, a: self._get(a)('installer', u''),
         'Load Order': lambda self, a: load_order.cached_lo_index_or_max(a),
+        'Indices'   : lambda self, a: load_order.cached_lo_index_esl_or_max(
+            a, bosh.modInfos),
         'Modified'  : lambda self, a: self.data_store[a].mtime,
         'Size'      : lambda self, a: self.data_store[a].size,
         'Status'    : lambda self, a: self.data_store[a].getStatus(),
         'Mod Status': lambda self, a: self.data_store[a].txt_status(),
         'CRC'       : lambda self, a: self.data_store[a].cached_mod_crc(),
     }
-    _extra_sortings = [_ModsUIList._sortEsmsFirst,
-                       _ModsUIList._activeModsFirst]
+    # FIXME(inf) This causes all other sortings besides 'Load Order' to break!
+#    _extra_sortings = [_ModsUIList._sortEsmsFirst,
+#                       _ModsUIList._activeModsFirst]
+    _extra_sortings = [_ModsUIList._activeModsFirst]
     _dndList, _dndColumns = True, ['Load Order']
     _sunkenBorder = False
     #--Labels
     labels = OrderedDict([
         ('File',       lambda self, p: self.data_store.masterWithVersion(p.s)),
         ('Load Order', lambda self, p: self.data_store.hexIndexString(p)),
+        ('Indices',    lambda self, p: self.data_store.final_hex_index(
+            p, bosh.modInfos)),
         ('Rating',     lambda self, p: self._get(p)('rating', u'')),
         ('Group',      lambda self, p: self._get(p)('group', u'')),
         ('Installer',  lambda self, p: self._get(p)('installer', u'')),

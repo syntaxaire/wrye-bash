@@ -1806,7 +1806,7 @@ class UIList(wx.Panel):
     _sunkenBorder = True
     _singleCell = False # allow only single selections (no ctrl/shift+click)
     #--Sorting
-    nonReversibleCols = {'Load Order', 'Current Order'}
+    nonReversibleCols = {'Load Order', 'Current Order', 'Indices'}
     _default_sort_col = 'File' # override as needed
     _sort_keys = {} # sort_keys[col] provides the sort key for this col
     _extra_sortings = [] #extra self.methods for fancy sortings - order matters

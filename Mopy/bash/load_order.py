@@ -201,6 +201,27 @@ def cached_lo_index_or_max(mod):
     except KeyError:
         return sys.maxint # sort mods that do not have a load order LAST
 
+def cached_lo_index_esl_or_max(mod, mod_infos):
+    try:
+        cached_lo_index(mod)
+    except KeyError:
+        # sort mods without load order last
+        return sys.maxint
+    if not cached_is_active(mod):
+        # sort inactive mods last
+        return sys.maxint
+    elif mod_infos[mod].is_esl():
+        lower_mods = [mod_infos[lower_mod] for lower_mod in
+                      cached_lower_loading_espms(mod)]
+        # sort ESLs after all regular mods
+        return 253 + len([lower_mod for lower_mod in lower_mods if
+                         lower_mod.is_esl()])
+    else:
+        lower_mods = [mod_infos[lower_mod] for lower_mod in
+                      cached_lower_loading_espms(mod)]
+        return len([lower_mod for lower_mod in lower_mods if
+                   not lower_mod.is_esl()])
+
 def cached_active_index(mod): return cached_lord.activeIndex(mod)
 
 def cached_lower_loading_espms(mod):
