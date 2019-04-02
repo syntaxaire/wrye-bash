@@ -48,7 +48,7 @@ import time
 import zipfile
 from contextlib import contextmanager
 
-import git
+import pygit2
 
 import _winreg
 import install_loot_api
@@ -165,12 +165,6 @@ def setup_parser(parser):
         help="Specify a custom path to the NSIS root folder.",
     )
     parser.add_argument(
-        "--git",
-        default="",
-        dest="git",
-        help="Specify a custom path to the git bin folder.",
-    )
-    parser.add_argument(
         "--non-repo",
         default=NonRepoAction.MOVE,
         action="store",
@@ -285,61 +279,32 @@ def pack_7z(file_list, archive, list_path):
         rm(list_path)
 
 
-def get_git_files(git_folder, version):
+def get_git_files(version):
     """
-    Using git.exe, parses the repository information to get a list of all
-    files that belong in the repository.  Returns a list of files with paths
-    relative to the Mopy directory, which can be used to ensure no non-repo
-    files get included in the installers.  This function will also print a
-    warning if there are non-committed changes.
+    Returns a list of files with paths relative to the Mopy directory, which
+    can be used to ensure no non-repo files get included in the installers.
+    This function will also print a warning if there are non-committed changes.
 
     Returns a list of all paths that git tracks plus Mopy/Apps (preserves case).
     """
-    if sys.platform != "win32":
-        raise OSError("Only Windows is supported.")
-    # check all the PATH options first
-    for path in os.environ["PATH"].split(os.pathsep):
-        git_exe = os.path.join(path, u"git.exe")
-        if os.path.isfile(git_exe):
-            LOGGER.debug("Found git executable at {}".format(git_exe))
-            # Found, no changes necessary
-            break
-    else:
-        # Not found in PATH, try user supplied directory,
-        # as well as common install paths
-        pfiles = os.path.join(os.environ.get("ProgramFiles", ""), u"Git", u"bin")
-        pfilesx64 = os.path.join(os.environ.get("ProgramW6432", ""), u"Git", u"bin")
-        for path in (git_folder, pfiles, pfilesx64):
-            git_exe = os.path.join(path, u"git.exe")
-            if os.path.isfile(git_exe):
-                LOGGER.debug("Found git executable at {}".format(git_exe))
-                # Found it, put the path into PATH
-                os.environ["PATH"] += os.pathsep + path
-                break
-        else:
-            # git still not found
-            raise IOError(
-                "Could not locate 'git.exe'. Try adding the path to "
-                "your git directory to the PATH environment variable."
-            )
-    # Git is working good, now use it
-    repo = git.Repo(ROOT_PATH)
-    if repo.is_dirty():
+    repo = pygit2.Repository(ROOT_PATH)
+    if any(a is not pygit2.GIT_STATUS_IGNORED for a in repo.status().itervalues()):
         LOGGER.warning("Your repository is dirty (you have uncommitted changes).")
-    # fixme XXX: add nightly branch name
-    branch_name = repo.active_branch.name.lower()
-    if not branch_name.startswith(("rel-", "release-")) or version not in branch_name:
+    branch_name = repo.head.shorthand
+    if not branch_name.startswith(("rel-", "release-", "nightly")):
         LOGGER.warning(
             "You are building off branch '{}', which does not appear to be "
             "a release branch for version {}".format(branch_name, version)
         )
     else:
         LOGGER.info("Building off branch '{}'".format(branch_name))
+    index = pygit2.Index()
+    index.read_tree(repo.revparse_single("HEAD").tree)
     files = [
-        unicode(os.path.normpath(x.path))
-        for x in repo.tree().traverse()
-        if x.path.lower().startswith(u"mopy")
-        and os.path.isfile(os.path.join(ROOT_PATH, x.path))
+        unicode(os.path.normpath(entry.path))
+        for entry in index
+        if entry.path.lower().startswith(u"mopy")
+        and os.path.isfile(os.path.join(ROOT_PATH, entry.path))
     ]
     # Special case: we want the Apps folder to be included, even though
     # it's not in the repository
@@ -778,7 +743,7 @@ def main(args):
         raise OSError("You must run at least Python 2.7.12 to package Wrye Bash.")
     with handle_apps_folder(), update_file_version(args.version, args.commit):
         # Get repository files
-        all_files = get_git_files(args.git, args.version)
+        all_files = get_git_files(args.version)
         # Add the LOOT API binaries to all_files
         loot_dll = os.path.join(u"Mopy", u"loot_api.dll")
         loot_pyd = os.path.join(u"Mopy", u"loot_api.pyd")
