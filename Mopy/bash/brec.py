@@ -462,6 +462,7 @@ class MelBase:
 
     @staticmethod
     def parseElements(*elements):
+        # type: (list[None|unicode|tuple]) -> list[tuple]
         """Parses elements and returns attrs,defaults,actions,formAttrs where:
         * attrs is tuple of attributes (names)
         * formAttrs is tuple of attributes that have fids,
@@ -1803,7 +1804,9 @@ class MreLeveledListBase(MelRecord):
         (3, 'specialLoot'),
         ))
     copyAttrs = ()
-    __slots__ = ['mergeOverLast', 'mergeSources', 'items', 'delevs', 'relevs']
+    __slots__ = ['mergeOverLast', 'mergeSources', 'items', 'delevs',
+                 'relevs'] #\
+                # + ['flags', 'entries'] # last two must be defined by the subclasses
 
     def __init__(self, header, ins=None, do_unpack=False):
         """Initialize"""
