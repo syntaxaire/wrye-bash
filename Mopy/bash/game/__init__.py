@@ -402,6 +402,7 @@ class GameInfo(object):
     # Race Patcher
     #------------------------------------------------------------------------------
     default_eyes = {}
+    race_types = ()
 
     # Record type to name dictionary
     record_type_name = {}
@@ -431,7 +432,7 @@ class GameInfo(object):
         'fid2Conditions', 'fid5Conditions', 'gmstEids', 'graphicsFidTypes',
         'graphicsLongsTypes', 'graphicsModelAttrs', 'graphicsTypes',
         'inventoryTypes', 'listTypes', 'namesTypes', 'pricesTypes',
-        'record_type_name', 'save_rec_types', 'soundsLongsTypes',
+        'race_types', 'record_type_name', 'save_rec_types', 'soundsLongsTypes',
         'soundsTypes', 'statsHeaders', 'statsTypes', 'xEdit_expert',
     }
     @classmethod

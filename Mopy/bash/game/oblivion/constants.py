@@ -1724,6 +1724,7 @@ default_eyes = {
 }
 # Clean these up, no need to keep them around now
 del _cobl, _ob
+race_types = ('EYES', 'HAIR', 'NPC_', 'RACE')
 
 # Record type to name dictionary
 record_type_name = {

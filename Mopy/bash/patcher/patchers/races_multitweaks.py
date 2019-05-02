@@ -682,7 +682,6 @@ class _ARacePatcher(SpecialPatcher, AListPatcher):
                u'R.Relations', u'Body-Size-M', u'R.Skills', u'Hair'}
 
 class RacePatcher(_ARacePatcher, ListPatcher):
-    races_data = {'EYES':[],'HAIR':[]}
     tweaks = sorted([
         RaceTweaker_BiggerOrcsAndNords(),
         RaceTweaker_MergeSimilarRaceHairs(),
@@ -715,7 +714,6 @@ class RacePatcher(_ARacePatcher, ListPatcher):
                            'skill7', 'skill7Boost'}
         self.eyeKeys = {u'Eyes'}
         self.eye_mesh = {}
-        self.scanTypes = {'RACE', 'EYES', 'HAIR', 'NPC_'}
         self.vanilla_eyes = _find_vanilla_eyes()
 
     def initData(self,progress):
@@ -828,11 +826,11 @@ class RacePatcher(_ARacePatcher, ListPatcher):
 
     def getReadClasses(self):
         """Returns load factory classes needed for reading."""
-        return ('RACE','EYES','HAIR','NPC_',) if self.isActive else ()
+        return bush.game.race_types if self.isActive else ()
 
     def getWriteClasses(self):
         """Returns load factory classes needed for writing."""
-        return ('RACE','EYES','HAIR','NPC_',) if self.isActive else ()
+        return bush.game.race_types if self.isActive else ()
 
     def scanModFile(self, modFile, progress):
         """Add appropriate records from modFile."""
@@ -841,8 +839,8 @@ class RacePatcher(_ARacePatcher, ListPatcher):
         eye_mesh = self.eye_mesh
         modName = modFile.fileInfo.name
         mapper = modFile.getLongMapper()
-        if not (set(modFile.tops) & self.scanTypes): return
-        modFile.convertToLongFids(('RACE','EYES','HAIR','NPC_'))
+        if not (set(modFile.tops) & set(bush.game.race_types)): return
+        modFile.convertToLongFids(bush.game.race_types)
         srcEyes = set(
             [record.fid for record in modFile.EYES.getActiveRecords()])
         #--Eyes, Hair
