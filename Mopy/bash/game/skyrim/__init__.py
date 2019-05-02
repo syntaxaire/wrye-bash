@@ -232,7 +232,7 @@ class SkyrimGameInfo(GameInfo):
             MreLscr, MreDlvw, MreTree, MreWatr, MreFlor, MreEyes, MreWeap, \
             MreIngr, MreClfm, MreMesg, MreLigh, MreExpl, MreLcrt, MreStat, \
             MreAmmo, MreSmqn, MreImad, MreSoun, MreAvif, MreCont, MreIpct, \
-            MreAspc, MreRela, MreEfsh, MreSnct, MreOtft
+            MreAspc, MreRela, MreEfsh, MreSnct, MreOtft, MreRace
         # ---------------------------------------------------------------------
         # Unused records, they have empty GRUP in skyrim.esm-------------------
         # CLDC HAIR PWAT RGDL SCOL SCPT
@@ -260,11 +260,11 @@ class SkyrimGameInfo(GameInfo):
             MreImgs, MreIngr, MreIpct, MreIpds, MreKeym, MreKywd, MreLcrt,
             MreLctn, MreLgtm, MreLigh, MreLscr, MreLtex, MreLvli, MreLvln,
             MreLvsp, MreMato, MreMatt, MreMesg, MreMgef, MreMisc, MreMovt,
-            MreMstt, MreMusc, MreMust, MreNpc, MreOtft, MreProj, MreRegn,
-            MreRela, MreRevb, MreRfct, MreScrl, MreShou, MreSlgm, MreSmbn,
-            MreSmen, MreSmqn, MreSnct, MreSndr, MreSopm, MreSoun, MreSpel,
-            MreSpgd, MreStat, MreTact, MreTree, MreTxst, MreVtyp, MreWatr,
-            MreWeap, MreWoop, MreWthr,
+            MreMstt, MreMusc, MreMust, MreNpc, MreOtft, MreProj, MreRace,
+            MreRegn, MreRela, MreRevb, MreRfct, MreScrl, MreShou, MreSlgm,
+            MreSmbn, MreSmen, MreSmqn, MreSnct, MreSndr, MreSopm, MreSoun,
+            MreSpel, MreSpgd, MreStat, MreTact, MreTree, MreTxst, MreVtyp,
+            MreWatr, MreWeap, MreWoop, MreWthr,
             ####### for debug
             MreQust,)
 
@@ -305,11 +305,11 @@ class SkyrimGameInfo(GameInfo):
             MreIpds, MreKeym, MreKywd, MreLcrt, MreLctn, MreLgtm, MreLigh,
             MreLscr, MreLtex, MreLvli, MreLvln, MreLvsp, MreMato, MreMatt,
             MreMesg, MreMgef, MreMisc, MreMovt, MreMstt, MreMusc, MreMust,
-            MreNpc, MreOtft, MreProj, MreRegn, MreRela, MreRevb, MreRfct,
-            MreScrl, MreShou, MreSlgm, MreSmbn, MreSmen, MreSmqn, MreSnct,
-            MreSndr, MreSopm, MreSoun, MreSpel, MreSpgd, MreStat, MreTact,
-            MreTree, MreTxst, MreVtyp, MreWatr, MreWeap, MreWoop, MreWthr,
-            MreCell, MreWrld,  # MreNavm, MreNavi
+            MreNpc, MreOtft, MreProj, MreRace, MreRegn, MreRela, MreRevb,
+            MreRfct, MreScrl, MreShou, MreSlgm, MreSmbn, MreSmen, MreSmqn,
+            MreSnct, MreSndr, MreSopm, MreSoun, MreSpel, MreSpgd, MreStat,
+            MreTact, MreTree, MreTxst, MreVtyp, MreWatr, MreWeap, MreWoop,
+            MreWthr, MreCell, MreWrld, # MreNavm, MreNavi
             ####### for debug
             MreQust, MreHeader,
         ))
