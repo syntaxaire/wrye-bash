@@ -792,7 +792,7 @@ class MelGroups(MelGroup):
     def __init__(self,attr,*elements):
         """Initialize. Must have at least one element."""
         MelGroup.__init__(self,attr,*elements)
-        self.type0 = self.elements[0].subType
+        self.type0 = self._get_first_elem().subType
 
     def setDefault(self,record):
         """Sets default value for record instance."""
@@ -823,6 +823,17 @@ class MelGroups(MelGroup):
         for target in record.__getattribute__(self.attr):
             for element in formElements:
                 element.mapFids(target,function,save)
+
+    def _get_first_elem(self):
+        """Retrieves the first element in this group, recursing into the first
+        element if it is also a MelGroups instance.
+
+        :return: The first element in this group.
+        """
+        first_elem = self.elements[0]
+        if isinstance(first_elem, MelGroups):
+            return first_elem._get_first_elem()
+        return first_elem
 
 #------------------------------------------------------------------------------
 class MelXpci(MelNull):
