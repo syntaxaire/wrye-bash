@@ -394,6 +394,11 @@ class GameInfo(object):
     #--------------------------------------------------------------------------
     inventoryTypes = ()
 
+    #------------------------------------------------------------------------------
+    # Race Patcher
+    #------------------------------------------------------------------------------
+    default_eyes = {}
+
     # Record type to name dictionary
     record_type_name = {}
 
@@ -418,11 +423,12 @@ class GameInfo(object):
     _constants_members = {
         'GlobalsTweaks', 'GmstTweaks', 'allBethFiles', 'allConditions',
         'bethDataFiles', 'cellAutoKeys', 'cellRecAttrs', 'cellRecFlags',
-        'conditionFunctionData', 'fid1Conditions', 'fid2Conditions',
-        'fid5Conditions', 'gmstEids', 'graphicsFidTypes', 'graphicsLongsTypes',
-        'graphicsModelAttrs', 'graphicsTypes', 'inventoryTypes', 'listTypes',
-        'namesTypes', 'pricesTypes', 'record_type_name', 'soundsLongsTypes',
-        'soundsTypes', 'statsHeaders', 'statsTypes', 'xEdit_expert',
+        'conditionFunctionData', 'default_eyes', 'fid1Conditions',
+        'fid2Conditions', 'fid5Conditions', 'gmstEids', 'graphicsFidTypes',
+        'graphicsLongsTypes', 'graphicsModelAttrs', 'graphicsTypes',
+        'inventoryTypes', 'listTypes', 'namesTypes', 'pricesTypes',
+        'record_type_name', 'soundsLongsTypes', 'soundsTypes', 'statsHeaders',
+        'statsTypes', 'xEdit_expert',
     }
     @classmethod
     def _dynamic_import_constants(cls, package_name):
