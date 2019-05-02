@@ -1724,6 +1724,12 @@ default_eyes = {
 }
 # Clean these up, no need to keep them around now
 del _cobl, _ob
+race_tweaks = (u'RaceTweaker_BiggerOrcsAndNords',
+               u'RaceTweaker_MergeSimilarRaceHairs',
+               u'RaceTweaker_MergeSimilarRaceEyes',
+               u'RaceTweaker_PlayableEyes', u'RaceTweaker_PlayableHairs',
+               u'RaceTweaker_SexlessHairs', u'RaceTweaker_AllEyes',
+               u'RaceTweaker_AllHairs')
 race_types = ('EYES', 'HAIR', 'NPC_', 'RACE')
 
 # Record type to name dictionary

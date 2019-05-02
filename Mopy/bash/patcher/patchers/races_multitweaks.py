@@ -682,16 +682,10 @@ class _ARacePatcher(SpecialPatcher, AListPatcher):
                u'R.Relations', u'Body-Size-M', u'R.Skills', u'Hair'}
 
 class RacePatcher(_ARacePatcher, ListPatcher):
-    tweaks = sorted([
-        RaceTweaker_BiggerOrcsAndNords(),
-        RaceTweaker_MergeSimilarRaceHairs(),
-        RaceTweaker_MergeSimilarRaceEyes(),
-        RaceTweaker_PlayableEyes(),
-        RaceTweaker_PlayableHairs(),
-        RaceTweaker_SexlessHairs(),
-        RaceTweaker_AllEyes(),
-        RaceTweaker_AllHairs(),
-        ],key=lambda a: a.label.lower())
+    # TODO(inf) Disgusting globals hack, the tweaks should be ripped into
+    # a game-specific module (game/*/patcher/tweaks.py?)
+    tweaks = sorted([globals()[tweak_name]() for tweak_name in
+                     bush.game.race_tweaks], key=lambda a: a.label.lower())
 
     #--Patch Phase ------------------------------------------------------------
     def initPatchFile(self, patchFile):
