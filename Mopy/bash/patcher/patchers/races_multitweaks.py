@@ -675,11 +675,7 @@ class _ARacePatcher(SpecialPatcher, AListPatcher):
               u" npcs that are otherwise missing them.")
             )
     tip = _(u"Merge race eyes, hair, body, voice from mods.")
-    autoKey = {u'R.Head', u'R.Ears', u'Eyes',
-               u'Voice-F', u'R.ChangeSpells', u'R.Teeth', u'Voice-M',
-               u'R.Attributes-M', u'R.Attributes-F', u'Body-F', u'Body-M',
-               u'R.Mouth', u'R.Description', u'R.AddSpells', u'Body-Size-F',
-               u'R.Relations', u'Body-Size-M', u'R.Skills', u'Hair'}
+    autoKey = bush.game.race_auto_keys
 
 class RacePatcher(_ARacePatcher, ListPatcher):
     # TODO(inf) Disgusting globals hack, the tweaks should be ripped into

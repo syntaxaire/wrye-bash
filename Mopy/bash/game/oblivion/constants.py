@@ -1724,6 +1724,11 @@ default_eyes = {
 }
 # Clean these up, no need to keep them around now
 del _cobl, _ob
+race_auto_keys = {u'R.Head', u'R.Ears', u'Eyes', u'Voice-F', u'R.ChangeSpells',
+                  u'R.Teeth', u'Voice-M', u'R.Attributes-M', u'R.Attributes-F',
+                  u'Body-F', u'Body-M', u'R.Mouth', u'R.Description',
+                  u'R.AddSpells', u'Body-Size-F', u'R.Relations',
+                  u'Body-Size-M', u'R.Skills', u'Hair'}
 race_tweaks = (u'RaceTweaker_BiggerOrcsAndNords',
                u'RaceTweaker_MergeSimilarRaceHairs',
                u'RaceTweaker_MergeSimilarRaceEyes',

@@ -402,6 +402,8 @@ class GameInfo(object):
     # Race Patcher
     #------------------------------------------------------------------------------
     default_eyes = {}
+    race_auto_keys = set()
+    race_rec_attrs = {}
     race_tweaks = ()
     race_types = ()
 
@@ -433,9 +435,9 @@ class GameInfo(object):
         'fid2Conditions', 'fid5Conditions', 'gmstEids', 'graphicsFidTypes',
         'graphicsLongsTypes', 'graphicsModelAttrs', 'graphicsTypes',
         'inventoryTypes', 'listTypes', 'namesTypes', 'pricesTypes',
-        'race_tweaks', 'race_types', 'record_type_name', 'save_rec_types',
-        'soundsLongsTypes', 'soundsTypes', 'statsHeaders', 'statsTypes',
-        'xEdit_expert',
+        'race_auto_keys', 'race_rec_attrs', 'race_tweaks', 'race_types',
+        'record_type_name', 'save_rec_types', 'soundsLongsTypes',
+        'soundsTypes', 'statsHeaders', 'statsTypes', 'xEdit_expert',
     }
     @classmethod
     def _dynamic_import_constants(cls, package_name):
