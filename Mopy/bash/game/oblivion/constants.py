@@ -1729,13 +1729,18 @@ race_auto_keys = {u'R.Head', u'R.Ears', u'Eyes', u'Voice-F', u'R.ChangeSpells',
                   u'Body-F', u'Body-M', u'R.Mouth', u'R.Description',
                   u'R.AddSpells', u'Body-Size-F', u'R.Relations',
                   u'Body-Size-M', u'R.Skills', u'Hair'}
+race_types = ('RACE',)
+
+#------------------------------------------------------------------------------
+# Race Tweaker
+#------------------------------------------------------------------------------
 race_tweaks = (u'RaceTweaker_BiggerOrcsAndNords',
                u'RaceTweaker_MergeSimilarRaceHairs',
                u'RaceTweaker_MergeSimilarRaceEyes',
                u'RaceTweaker_PlayableEyes', u'RaceTweaker_PlayableHairs',
                u'RaceTweaker_SexlessHairs', u'RaceTweaker_AllEyes',
                u'RaceTweaker_AllHairs')
-race_types = ('EYES', 'HAIR', 'NPC_', 'RACE')
+race_tweak_types = ('EYES', 'HAIR', 'NPC_', 'RACE')
 
 # Record type to name dictionary
 record_type_name = {

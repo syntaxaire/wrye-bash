@@ -17306,10 +17306,11 @@ graphicsModelAttrs = ('model',)
 # Inventory Patcher
 #------------------------------------------------------------------------------
 inventoryTypes = ('NPC_','CONT',)
+
 #------------------------------------------------------------------------------
 # Race Patcher
 #------------------------------------------------------------------------------
-race_types = ('NPC_', 'RACE')
+race_types = ('RACE',)
 
 # Record type to name dictionary
 record_type_name = {

@@ -1033,7 +1033,7 @@ class CBash_UpdateReferences(base.CBash_UpdateReferences,
                              _ListPatcherPanel):
     canAutoItemCheck = False #--GUI: Whether new items are checked by default.
 
-class RacePatcher(races_multitweaks.RacePatcher, _DoublePatcherPanel): pass
+class RacePatcher(races_multitweaks.RacePatcher, _ListPatcherPanel): pass
 class CBash_RacePatcher(races_multitweaks.CBash_RacePatcher,
                         _DoublePatcherPanel): pass
 

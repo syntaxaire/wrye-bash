@@ -404,8 +404,13 @@ class GameInfo(object):
     default_eyes = {}
     race_auto_keys = set()
     race_rec_attrs = {}
-    race_tweaks = ()
     race_types = ()
+
+    #--------------------------------------------------------------------------
+    # Race Tweaker
+    #--------------------------------------------------------------------------
+    race_tweaks = ()
+    race_tweak_types = ()
 
     # Record type to name dictionary
     record_type_name = {}
@@ -435,8 +440,8 @@ class GameInfo(object):
         'fid2Conditions', 'fid5Conditions', 'gmstEids', 'graphicsFidTypes',
         'graphicsLongsTypes', 'graphicsModelAttrs', 'graphicsTypes',
         'inventoryTypes', 'listTypes', 'namesTypes', 'pricesTypes',
-        'race_auto_keys', 'race_rec_attrs', 'race_tweaks', 'race_types',
-        'record_type_name', 'save_rec_types', 'soundsLongsTypes',
+        'race_auto_keys', 'race_rec_attrs', 'race_tweaks', 'race_tweak_types',
+        'race_types', 'record_type_name', 'save_rec_types', 'soundsLongsTypes',
         'soundsTypes', 'statsHeaders', 'statsTypes', 'xEdit_expert',
     }
     @classmethod

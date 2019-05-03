@@ -40,7 +40,7 @@ from ...cint import ValidateDict, FormID
 from ...exception import BoltError
 from ...patcher.base import AMultiTweakItem, AListPatcher
 from .base import MultiTweakItem, CBash_MultiTweakItem, SpecialPatcher, \
-    ListPatcher, CBash_ListPatcher
+    ListPatcher, CBash_ListPatcher, AMultiTweaker, MultiTweaker
 from ...parsers import LoadFactory, ModFile
 
 # Patchers: 40 ----------------------------------------------------------------
@@ -663,30 +663,258 @@ def _find_vanilla_eyes():
         ret[new_key] = new_val
     return ret
 
-class _ARacePatcher(SpecialPatcher, AListPatcher):
-    """Merged leveled lists mod file."""
-    name = _(u'Race Records')
-    text = (_(u"Merge race eyes, hair, body, voice from ACTIVE AND/OR MERGED"
-              u" mods.  Any non-active, non-merged mods in the following list"
-              u" will be IGNORED.") + u'\n\n' +
-            _(u"Even if none of the below mods are checked, this will sort"
-              u" hairs and eyes and attempt to remove googly eyes from all"
-              u" active mods.  It will also randomly assign hairs and eyes to"
-              u" npcs that are otherwise missing them.")
-            )
-    tip = _(u"Merge race eyes, hair, body, voice from mods.")
-    autoKey = bush.game.race_auto_keys
+class _ARaceTweaker(SpecialPatcher, AMultiTweaker):
+    name = _(u'Race Tweaker')
+    text = _(u"Even if none of the tweaks below are checked, this will sort "
+             u"hairs and eyes and attempt to remove googly eyes from all "
+             u"active mods.  It will also randomly assign hairs and eyes to "
+             u"NPCs that are otherwise missing them.")
+    tweaks = []
+    enabledTweaks = [] # set in _TweakPatcherPanel.saveConfig
 
-class RacePatcher(_ARacePatcher, ListPatcher):
+class RaceTweaker(_ARaceTweaker, MultiTweaker):
     # TODO(inf) Disgusting globals hack, the tweaks should be ripped into
     # a game-specific module (game/*/patcher/tweaks.py?)
     tweaks = sorted([globals()[tweak_name]() for tweak_name in
                      bush.game.race_tweaks], key=lambda a: a.label.lower())
+    _re_process = re.compile(
+        ur'(?:dremora)|(?:akaos)|(?:lathulet)|(?:orthe)|(?:ranyu)',
+        re.I | re.U)
 
+    def initPatchFile(self, patchFile):
+        super(RaceTweaker, self).initPatchFile(patchFile)
+        # TODO(inf) This is a dict mapping strings to both lists and dicts
+        # This is disgusting and should be split into two dicts
+        self.eye_mesh = {}
+        self.races_data = defaultdict(list)
+        self.vanilla_eyes = _find_vanilla_eyes()
+
+    def getReadClasses(self):
+        return bush.game.race_tweak_types if self.isActive else ()
+
+    def getWriteClasses(self):
+        return bush.game.race_tweak_types if self.isActive else ()
+
+    def scanModFile(self, modFile, progress):
+        if not self.isActive: return
+        if not (set(modFile.tops) & set(bush.game.race_tweak_types)): return
+        modFile.convertToLongFids(bush.game.race_tweak_types)
+        mapper = modFile.getLongMapper()
+        modName = modFile.fileInfo.name
+        # Load NPCs with missing eyes
+        patchBlock = self.patchFile.NPC_
+        id_records = patchBlock.id_records
+        for record in modFile.NPC_.getActiveRecords():
+            if not record.eye and record.fid not in id_records:
+                patchBlock.setRecord(record.getTypeCopy(mapper))
+        # Remember details for all named races, needed for some tweaks
+        # Also, check and save eye details for each race
+        patchBlock = self.patchFile.RACE
+        id_records = patchBlock.id_records
+        srcEyes = set(
+            [record.fid for record in modFile.EYES.getActiveRecords()])
+        eye_mesh = self.eye_mesh
+        for record in modFile.RACE.getActiveRecords():
+            if record.fid not in id_records:
+                patchBlock.setRecord(record.getTypeCopy(mapper))
+            if record.full:
+                self.races_data[record.full.lower()] = {
+                    'hairs': record.hairs, 'eyes': record.eyes,
+                    'relations': record.relations
+                }
+            if not record.rightEye or not record.leftEye:
+                deprint(_(u'No right and/or no left eye recorded in race %s, '
+                          u'from mod %s') % (record.full, modName))
+                continue
+            for eye in record.eyes:
+                if eye in srcEyes:
+                    eye_mesh[eye] = (record.rightEye.modPath.lower(),
+                                     record.leftEye.modPath.lower())
+        # Load all EYES and HAIR records, needed for some tweaks
+        for tweakType in ('EYES', 'HAIR'):
+            patchBlock = getattr(self.patchFile, tweakType)
+            id_records = patchBlock.id_records
+            raceList = self.races_data[tweakType]
+            for record in getattr(modFile, tweakType).getActiveRecords():
+                raceList.append(record.fid)
+                if record.fid not in id_records:
+                    patchBlock.setRecord(record.getTypeCopy(mapper))
+        # Give each tweak a chance to scan
+        for tweak in self.enabledTweaks:
+            tweak.scanModFile(modFile, progress, self.patchFile)
+
+    def buildPatch(self, log, progress):
+        if not self.isActive: return
+        patchFile = self.patchFile
+        keep = patchFile.getKeeper()
+        if 'RACE' not in patchFile.tops: return
+        racesSorted = []
+        racesFiltered = []
+        mod_npcsFixed = {}
+        #--Sort Eyes/Hair
+        final_eyes = {}
+        defaultMaleHair = {}
+        defaultFemaleHair = {}
+        eyeNames  = dict((x.fid,x.full) for x in patchFile.EYES.records)
+        hairNames = dict((x.fid,x.full) for x in patchFile.HAIR.records)
+        maleHairs = set(
+            x.fid for x in patchFile.HAIR.records if not x.flags.notMale)
+        femaleHairs = set(
+            x.fid for x in patchFile.HAIR.records if not x.flags.notFemale)
+        for race in patchFile.RACE.records:
+            if (race.flags.playable or race.fid == (
+                    GPath(u'Oblivion.esm'), 0x038010)) and race.eyes:
+                final_eyes[race.fid] = [x for x in
+                                        self.vanilla_eyes.get(race.fid, [])
+                                        if x in race.eyes]
+                if not final_eyes[race.fid]:
+                    final_eyes[race.fid] = [race.eyes[0]]
+                defaultMaleHair[race.fid] = [x for x in race.hairs if
+                                             x in maleHairs]
+                defaultFemaleHair[race.fid] = [x for x in race.hairs if
+                                               x in femaleHairs]
+                race.hairs.sort(key=lambda x: hairNames.get(x))
+                race.eyes.sort(key=lambda x: eyeNames.get(x))
+                racesSorted.append(race.eid)
+                keep(race.fid)
+        # Randomly assign eyes and hair to NPCs that are missing them
+        for npc in self.patchFile.NPC_.records:
+            # skip player
+            if npc.fid == (GPath(u'Oblivion.esm'), 0x000007): continue
+            if npc.full is not None and npc.race == (GPath(u'Oblivion.esm'),
+                                                     0x038010) and not \
+                    self._re_process.search(npc.full): continue
+            raceEyes = final_eyes.get(npc.race)
+            if not npc.eye and raceEyes:
+                npc.eye = random.choice(raceEyes)
+                srcMod = npc.fid[0]
+                if srcMod not in mod_npcsFixed: mod_npcsFixed[srcMod] = set()
+                keep(npc.fid)
+                mod_npcsFixed[srcMod].add(npc.fid)
+            raceHair = (
+                (defaultMaleHair, defaultFemaleHair)[npc.flags.female]).get(
+                npc.race)
+            if not npc.hair and raceHair:
+                npc.hair = random.choice(raceHair)
+                srcMod = npc.fid[0]
+                if srcMod not in mod_npcsFixed: mod_npcsFixed[srcMod] = set()
+                keep(npc.fid)
+                if npc.fid in mod_npcsFixed[srcMod]: continue
+                mod_npcsFixed[srcMod].add(npc.fid)
+            if not npc.hairLength:
+                npc.hairLength = random.random()
+                srcMod = npc.fid[0]
+                if srcMod not in mod_npcsFixed: mod_npcsFixed[srcMod] = set()
+                keep(npc.fid)
+                if npc.fid in mod_npcsFixed[srcMod]: continue
+                mod_npcsFixed[srcMod].add(npc.fid)
+        #--Eye Mesh filtering
+        eye_mesh = self.eye_mesh
+        try:
+            blueEyeMesh = eye_mesh[(GPath(u'Oblivion.esm'),0x27308)]
+        except KeyError:
+            print u'error getting blue eye mesh:'
+            print u'eye meshes:', eye_mesh
+            raise
+        argonianEyeMesh = eye_mesh[(GPath(u'Oblivion.esm'),0x3e91e)]
+        for eye in (
+            (GPath(u'Oblivion.esm'),0x1a), #--Reanimate
+            (GPath(u'Oblivion.esm'),0x54bb9), #--Dark Seducer
+            (GPath(u'Oblivion.esm'),0x54bba), #--Golden Saint
+            (GPath(u'Oblivion.esm'),0x5fa43), #--Ordered
+            ):
+            eye_mesh.setdefault(eye,blueEyeMesh)
+        def setRaceEyeMesh(race,rightPath,leftPath):
+            race.rightEye.modPath = rightPath
+            race.leftEye.modPath = leftPath
+        for race in patchFile.RACE.records:
+            if not race.eyes: continue  #--Sheogorath. Assume is handled
+            # correctly.
+            if not race.rightEye or not race.leftEye: continue #--WIPZ race?
+            if re.match(u'^117[a-zA-Z]', race.eid, flags=re.U): continue  #--
+            #  x117 race?
+            raceChanged = False
+            mesh_eye = {}
+            for eye in race.eyes:
+                if eye not in eye_mesh:
+                    deprint(
+                        _(u'Mesh undefined for eye %s in race %s, eye removed '
+                          u'from race list.') % (
+                            strFid(eye), race.eid,))
+                    continue
+                mesh = eye_mesh[eye]
+                if mesh not in mesh_eye:
+                    mesh_eye[mesh] = []
+                mesh_eye[mesh].append(eye)
+            currentMesh = (
+                race.rightEye.modPath.lower(), race.leftEye.modPath.lower())
+            try:
+                maxEyesMesh = \
+                    sorted(mesh_eye.keys(), key=lambda a: len(mesh_eye[a]),
+                           reverse=True)[0]
+            except IndexError:
+                maxEyesMesh = blueEyeMesh
+            #--Single eye mesh, but doesn't match current mesh?
+            if len(mesh_eye) == 1 and currentMesh != maxEyesMesh:
+                setRaceEyeMesh(race,*maxEyesMesh)
+                raceChanged = True
+            if len(mesh_eye) > 1 and (race.flags.playable or race.fid == (
+                    GPath('Oblivion.esm'), 0x038010)):
+                #--If blueEyeMesh (mesh used for vanilla eyes) is present,
+                # use that.
+                if blueEyeMesh in mesh_eye and currentMesh != argonianEyeMesh:
+                    setRaceEyeMesh(race,*blueEyeMesh)
+                    race.eyes = mesh_eye[blueEyeMesh]
+                    raceChanged = True
+                elif argonianEyeMesh in mesh_eye:
+                    setRaceEyeMesh(race,*argonianEyeMesh)
+                    race.eyes = mesh_eye[argonianEyeMesh]
+                    raceChanged = True
+                #--Else figure that current eye mesh is the correct one
+                elif currentMesh in mesh_eye:
+                    race.eyes = mesh_eye[currentMesh]
+                    raceChanged = True
+                #--Else use most popular eye mesh
+                else:
+                    setRaceEyeMesh(race,*maxEyesMesh)
+                    race.eyes = mesh_eye[maxEyesMesh]
+                    raceChanged = True
+            if raceChanged:
+                racesFiltered.append(race.eid)
+                keep(race.fid)
+        for tweak in self.enabledTweaks:
+            tweak.buildPatch(progress, self.patchFile, self.races_data)
+        log.setHeader(u'= ' + self.__class__.name)
+        log(u'\n=== '+_(u'Eyes/Hair Sorted'))
+        if not racesSorted:
+            log(u'. ~~%s~~'%_(u'None'))
+        else:
+            for eid in sorted(racesSorted):
+                log(u'* '+eid)
+        log(u'\n=== '+_(u'Eye Meshes Filtered'))
+        if not racesFiltered:
+            log(u'. ~~%s~~'%_(u'None'))
+        else:
+            log(_(u"In order to prevent 'googly eyes', incompatible eyes have "
+                  u"been removed from the following races."))
+            for eid in sorted(racesFiltered):
+                log(u'* '+eid)
+        for tweak in self.enabledTweaks:
+            tweak._patchLog(log, tweak.count)
+
+class _ARacePatcher(SpecialPatcher, AListPatcher):
+    """Merge changes to RACE records."""
+    name = _(u'Race Records')
+    text = (_(u"Merge race eyes, hair, body, voice from ACTIVE AND/OR MERGED "
+              u"mods.  Any non-active, non-merged mods in the following list "
+              u"will be IGNORED."))
+    tip = _(u"Merge race eyes, hair, body, voice from mods.")
+    autoKey = bush.game.race_auto_keys
+
+class RacePatcher(_ARacePatcher, ListPatcher):
     #--Patch Phase ------------------------------------------------------------
     def initPatchFile(self, patchFile):
         super(RacePatcher, self).initPatchFile(patchFile)
-        self.races_data = {'EYES':[],'HAIR':[]}
         self.raceData = {} #--Race eye meshes, hair,eyes
         self.tempRaceData = {}
         #--Restrict srcs to active/merged mods.
@@ -703,7 +931,6 @@ class RacePatcher(_ARacePatcher, ListPatcher):
                            'skill5', 'skill5Boost', 'skill6', 'skill6Boost',
                            'skill7', 'skill7Boost'}
         self.eyeKeys = {u'Eyes'}
-        self.eye_mesh = {}
         self.vanilla_eyes = _find_vanilla_eyes()
 
     def initData(self,progress):
@@ -825,64 +1052,24 @@ class RacePatcher(_ARacePatcher, ListPatcher):
     def scanModFile(self, modFile, progress):
         """Add appropriate records from modFile."""
         if not self.isActive: return
-        races_data = self.races_data
-        eye_mesh = self.eye_mesh
-        modName = modFile.fileInfo.name
         mapper = modFile.getLongMapper()
         if not (set(modFile.tops) & set(bush.game.race_types)): return
         modFile.convertToLongFids(bush.game.race_types)
-        srcEyes = set(
-            [record.fid for record in modFile.EYES.getActiveRecords()])
-        #--Eyes, Hair
-        for type in ('EYES','HAIR'):
-            patchBlock = getattr(self.patchFile,type)
-            id_records = patchBlock.id_records
-            for record in getattr(modFile,type).getActiveRecords():
-                races_data[type].append(record.fid)
-                if record.fid not in id_records:
-                    patchBlock.setRecord(record.getTypeCopy(mapper))
-        #--Npcs with unassigned eyes
-        patchBlock = self.patchFile.NPC_
-        id_records = patchBlock.id_records
-        for record in modFile.NPC_.getActiveRecords():
-            if not record.eye and record.fid not in id_records:
-                patchBlock.setRecord(record.getTypeCopy(mapper))
-        #--Race block
         patchBlock = self.patchFile.RACE
         id_records = patchBlock.id_records
         for record in modFile.RACE.getActiveRecords():
             if record.fid not in id_records:
                 patchBlock.setRecord(record.getTypeCopy(mapper))
-            if not record.rightEye or not record.leftEye:
-                deprint(_(u'No right and/or no left eye recorded in race %s, '
-                          u'from mod %s') % (
-                            record.full, modName))
-                continue
-            for eye in record.eyes:
-                if eye in srcEyes:
-                    eye_mesh[eye] = (record.rightEye.modPath.lower(),
-                                     record.leftEye.modPath.lower())
-        for tweak in self.enabledTweaks:
-            tweak.scanModFile(modFile,progress,self.patchFile)
 
     def buildPatch(self,log,progress):
         """Updates races as needed."""
-        debug = False
-        extra_ = self.races_data
         if not self.isActive: return
         patchFile = self.patchFile
         keep = patchFile.getKeeper()
         if 'RACE' not in patchFile.tops: return
         racesPatched = []
-        racesSorted = []
-        racesFiltered = []
-        mod_npcsFixed = {}
-        reProcess = re.compile(
-            ur'(?:dremora)|(?:akaos)|(?:lathulet)|(?:orthe)|(?:ranyu)',
-            re.I | re.U)
         #--Import race info
         for race in patchFile.RACE.records:
-            #~~print 'Building',race.eid
             raceData = self.raceData.get(race.fid,None)
             if not raceData: continue
             raceChanged = False
@@ -958,157 +1145,9 @@ class RacePatcher(_ARacePatcher, ListPatcher):
                         entry.mod = mod
                         race.relations.append(entry)
                     raceChanged = True
-            #--Changed
             if raceChanged:
                 racesPatched.append(race.eid)
                 keep(race.fid)
-        #--Eye Mesh filtering
-        eye_mesh = self.eye_mesh
-        try:
-            blueEyeMesh = eye_mesh[(GPath(u'Oblivion.esm'),0x27308)]
-        except KeyError:
-            print u'error getting blue eye mesh:'
-            print u'eye meshes:', eye_mesh
-            raise
-        argonianEyeMesh = eye_mesh[(GPath(u'Oblivion.esm'),0x3e91e)]
-        if debug:
-            print u'== Eye Mesh Filtering'
-            print u'blueEyeMesh',blueEyeMesh
-            print u'argonianEyeMesh',argonianEyeMesh
-        for eye in (
-            (GPath(u'Oblivion.esm'),0x1a), #--Reanimate
-            (GPath(u'Oblivion.esm'),0x54bb9), #--Dark Seducer
-            (GPath(u'Oblivion.esm'),0x54bba), #--Golden Saint
-            (GPath(u'Oblivion.esm'),0x5fa43), #--Ordered
-            ):
-            eye_mesh.setdefault(eye,blueEyeMesh)
-        def setRaceEyeMesh(race,rightPath,leftPath):
-            race.rightEye.modPath = rightPath
-            race.leftEye.modPath = leftPath
-        for race in patchFile.RACE.records:
-            if debug: print u'===', race.eid
-            if not race.eyes: continue  #--Sheogorath. Assume is handled
-            # correctly.
-            if not race.rightEye or not race.leftEye: continue #--WIPZ race?
-            if re.match(u'^117[a-zA-Z]', race.eid, flags=re.U): continue  #--
-            #  x117 race?
-            raceChanged = False
-            mesh_eye = {}
-            for eye in race.eyes:
-                if eye not in eye_mesh:
-                    deprint(
-                        _(u'Mesh undefined for eye %s in race %s, eye removed '
-                          u'from race list.') % (
-                            strFid(eye), race.eid,))
-                    continue
-                mesh = eye_mesh[eye]
-                if mesh not in mesh_eye:
-                    mesh_eye[mesh] = []
-                mesh_eye[mesh].append(eye)
-            currentMesh = (
-                race.rightEye.modPath.lower(), race.leftEye.modPath.lower())
-            try:
-                maxEyesMesh = \
-                    sorted(mesh_eye.keys(), key=lambda a: len(mesh_eye[a]),
-                           reverse=True)[0]
-            except IndexError:
-                maxEyesMesh = blueEyeMesh
-            #--Single eye mesh, but doesn't match current mesh?
-            if len(mesh_eye) == 1 and currentMesh != maxEyesMesh:
-                setRaceEyeMesh(race,*maxEyesMesh)
-                raceChanged = True
-            #--Multiple eye meshes (and playable)?
-            if debug:
-                for mesh,eyes in mesh_eye.iteritems():
-                    print mesh
-                    for eye in eyes: print ' ',strFid(eye)
-            if len(mesh_eye) > 1 and (race.flags.playable or race.fid == (
-                    GPath('Oblivion.esm'), 0x038010)):
-                #--If blueEyeMesh (mesh used for vanilla eyes) is present,
-                # use that.
-                if blueEyeMesh in mesh_eye and currentMesh != argonianEyeMesh:
-                    setRaceEyeMesh(race,*blueEyeMesh)
-                    race.eyes = mesh_eye[blueEyeMesh]
-                    raceChanged = True
-                elif argonianEyeMesh in mesh_eye:
-                    setRaceEyeMesh(race,*argonianEyeMesh)
-                    race.eyes = mesh_eye[argonianEyeMesh]
-                    raceChanged = True
-                #--Else figure that current eye mesh is the correct one
-                elif currentMesh in mesh_eye:
-                    race.eyes = mesh_eye[currentMesh]
-                    raceChanged = True
-                #--Else use most popular eye mesh
-                else:
-                    setRaceEyeMesh(race,*maxEyesMesh)
-                    race.eyes = mesh_eye[maxEyesMesh]
-                    raceChanged = True
-            if raceChanged:
-                racesFiltered.append(race.eid)
-                keep(race.fid)
-            if race.full:
-                extra_[race.full.lower()] = {'hairs': race.hairs,
-                                            'eyes': race.eyes,
-                                            'relations': race.relations}
-        for tweak in self.enabledTweaks:
-            tweak.buildPatch(progress,self.patchFile,extra_)
-        #--Sort Eyes/Hair
-        final_eyes = {}
-        defaultMaleHair = {}
-        defaultFemaleHair = {}
-        eyeNames  = dict((x.fid,x.full) for x in patchFile.EYES.records)
-        hairNames = dict((x.fid,x.full) for x in patchFile.HAIR.records)
-        maleHairs = set(
-            x.fid for x in patchFile.HAIR.records if not x.flags.notMale)
-        femaleHairs = set(
-            x.fid for x in patchFile.HAIR.records if not x.flags.notFemale)
-        for race in patchFile.RACE.records:
-            if (race.flags.playable or race.fid == (
-                    GPath(u'Oblivion.esm'), 0x038010)) and race.eyes:
-                final_eyes[race.fid] = [x for x in
-                                        self.vanilla_eyes.get(race.fid, [])
-                                        if x in race.eyes]
-                if not final_eyes[race.fid]:
-                    final_eyes[race.fid] = [race.eyes[0]]
-                defaultMaleHair[race.fid] = [x for x in race.hairs if
-                                             x in maleHairs]
-                defaultFemaleHair[race.fid] = [x for x in race.hairs if
-                                               x in femaleHairs]
-                race.hairs.sort(key=lambda x: hairNames.get(x))
-                race.eyes.sort(key=lambda x: eyeNames.get(x))
-                racesSorted.append(race.eid)
-                keep(race.fid)
-        #--Npcs with unassigned eyes/hair
-        for npc in patchFile.NPC_.records:
-            if npc.fid == (GPath(u'Oblivion.esm'), 0x000007): continue  #
-            # skip player
-            if npc.full is not None and npc.race == (
-                    GPath(u'Oblivion.esm'), 0x038010) and not reProcess.search(
-                    npc.full): continue
-            raceEyes = final_eyes.get(npc.race)
-            if not npc.eye and raceEyes:
-                npc.eye = random.choice(raceEyes)
-                srcMod = npc.fid[0]
-                if srcMod not in mod_npcsFixed: mod_npcsFixed[srcMod] = set()
-                mod_npcsFixed[srcMod].add(npc.fid)
-                keep(npc.fid)
-            raceHair = (
-                (defaultMaleHair, defaultFemaleHair)[npc.flags.female]).get(
-                npc.race)
-            if not npc.hair and raceHair:
-                npc.hair = random.choice(raceHair)
-                srcMod = npc.fid[0]
-                if srcMod not in mod_npcsFixed: mod_npcsFixed[srcMod] = set()
-                mod_npcsFixed[srcMod].add(npc.fid)
-                keep(npc.fid)
-            if not npc.hairLength:
-                npc.hairLength = random.random()
-                srcMod = npc.fid[0]
-                if srcMod not in mod_npcsFixed: mod_npcsFixed[srcMod] = set()
-                keep(npc.fid)
-                if npc.fid in mod_npcsFixed[srcMod]: continue
-                mod_npcsFixed[srcMod].add(npc.fid)
-
         #--Done
         log.setHeader(u'= '+self.__class__.name)
         self._srcMods(log)
@@ -1118,26 +1157,6 @@ class RacePatcher(_ARacePatcher, ListPatcher):
         else:
             for eid in sorted(racesPatched):
                 log(u'* '+eid)
-        log(u'\n=== '+_(u'Eyes/Hair Sorted'))
-        if not racesSorted:
-            log(u'. ~~%s~~'%_(u'None'))
-        else:
-            for eid in sorted(racesSorted):
-                log(u'* '+eid)
-        log(u'\n=== '+_(u'Eye Meshes Filtered'))
-        if not racesFiltered:
-            log(u'. ~~%s~~'%_(u'None'))
-        else:
-            log(_(u"In order to prevent 'googly eyes', incompatible eyes have "
-                  u"been removed from the following races."))
-            for eid in sorted(racesFiltered):
-                log(u'* '+eid)
-        if mod_npcsFixed:
-            log(u'\n=== '+_(u'Eyes/Hair Assigned for NPCs'))
-            for srcMod in sorted(mod_npcsFixed):
-                log(u'* %s: %d' % (srcMod.s,len(mod_npcsFixed[srcMod])))
-        for tweak in self.enabledTweaks:
-            tweak._patchLog(log,tweak.count)
 
 #-------------------------- CBash only RacePatchers --------------------------#
 class CBash_RacePatcher_Relations(SpecialPatcher):
