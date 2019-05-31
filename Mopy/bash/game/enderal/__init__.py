@@ -43,7 +43,7 @@ class EnderalGameInfo(SkyrimGameInfo):
         u'SureAI\\Enderal',
         u'Install_Path'
     )
-    saveProfilesKey = (u'General', u'SLocalSavePath', u'..\\Enderal\\Saves\\')
+    saveProfilesKey = (u'General', u'SLocalSavePath', u'..\\Enderal\\Saves')
 
     nexusUrl = u'https://www.nexusmods.com/enderal/'
     nexusName = u'Enderal Nexus'
