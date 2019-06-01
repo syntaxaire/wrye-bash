@@ -226,7 +226,7 @@ class ImageBundle:
         if not self.iconBundle:
             self.iconBundle = wx.IconBundle()
             for img_path in self._image_paths:
-                self.iconBundle.AddIconFromFile(
+                self.iconBundle.AddIcon(
                     img_path.s, Image.typesDict[img_path.cext[1:]])
         return self.iconBundle
 
