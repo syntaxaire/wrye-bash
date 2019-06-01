@@ -2806,7 +2806,7 @@ class ListBoxes(Dialog):
         self.itemMenu.append(_CheckList_SelectAll(False))
         self.SetIcons(Resources.bashBlue)
         minWidth = self.GetTextExtent(title)[0] * 1.2 + 64
-        sizer = wx.FlexGridSizer(len(lists) + 2, 1)
+        sizer = wx.FlexGridSizer(len(lists) + 2, 1, 0, 0)
         self.text = StaticText(self, message)
         self.text.Rewrap(minWidth) # otherwise self.text expands to max width
         sizer.AddGrowableRow(0) # needed so text fits - glitch on resize
