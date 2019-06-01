@@ -4020,13 +4020,6 @@ class BashApp(wx.App):
         with balt.Progress(u'Wrye Bash', _(u'Initializing') + u' ' * 10,
                            elapsed=False) as progress:
             # Is splash enabled in ini ?
-            if bass.inisettings['EnableSplashScreen']:
-                if bass.dirs['images'].join(u'wryesplash.png').exists():
-                    try:
-                            splashScreen = balt.WryeBashSplashScreen()
-                            splashScreen.Show()
-                    except:
-                            pass
             #--Constants
             self.InitResources()
             #--Init Data
