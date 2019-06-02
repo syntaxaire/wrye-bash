@@ -310,6 +310,9 @@ def _main(opts):
     else:
         app = basher.BashApp()
 
+    # we must use this wx class after wx.App is initialized ........ XXXXX
+    _wx.Locale(_wx.LANGUAGE_DEFAULT)
+
     if not is_standalone and (
         not _rightWxVersion() or not _rightPythonVersion()): return
     if env.isUAC:

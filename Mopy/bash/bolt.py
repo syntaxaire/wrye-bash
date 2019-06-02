@@ -336,8 +336,8 @@ def dumpTranslator(outPath, lang, *files):
     return outTxt
 
 def initTranslator(lang=None, path=None):
-    # if locale.getlocale() == (None,None):
-    #     locale.setlocale(locale.LC_ALL,u'')
+    if locale.getlocale() == (None,None):
+        locale.setlocale(locale.LC_ALL,u'')
     if not lang:
         try:
             getlocale = locale.getlocale()
@@ -383,6 +383,9 @@ def initTranslator(lang=None, path=None):
             traceback.print_exc()
             trans = gettext.NullTranslations()
     trans.install(unicode=True)
+    # wx ugly hack - it will blow if the locale is not C and we must init the
+    # wx.Locale ugly hack after the app is init.............
+    locale.setlocale(locale.LC_ALL, u'C')
 
 #--Do translator test and set
 initTranslator(bass.language)
