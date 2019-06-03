@@ -613,9 +613,15 @@ class Box(_SizerWrapper):
         flags = wx.ALL | wx.ALIGN_CENTER_VERTICAL
         if grow:
             flags |= wx.EXPAND
-        if self._spacing > 0 and not self._sizer.IsEmpty():
+        if self._spacing > 0 and not self._is_empty_wx3():
             self._sizer.AddSpacer(self._spacing)
         self._sizer.Add(element, proportion=weight, flag=flags, border=border)
+
+    def _is_empty_wx3(self): # TODO(ut) remove once we move to wx3
+        try:
+            return self._sizer.IsEmpty()
+        except AttributeError:
+            return not len(self._sizer.Children)
 
     def add_many(self, *elements):
         for element in elements:
@@ -660,14 +666,21 @@ class GridBox(_SizerWrapper):
 
     def set_stretch(self, col=None, row=None, weight=0):
         if row is not None:
-            if self._sizer.IsRowGrowable(row):
+            if self._is_growable_wx3(row, _is_row=True):
                 self._sizer.RemoveGrowableRow(row)
             self._sizer.AddGrowableRow(row, proportion=weight)
         if col is not None:
-            if self._sizer.IsColGrowable(col):
+            if self._is_growable_wx3(col, _is_row=False):
                 self._sizer.RemoveGrowableCol(col)
             self._sizer.AddGrowableCol(col, proportion=weight)
 
+    def _is_growable_wx3(self, idx, _is_row): # FIXME(ut) return True ??
+        try:
+            meth = self._sizer.IsRowGrowable if _is_row else \
+                self._sizer.IsColGrowable
+            return meth(idx)
+        except AttributeError:
+            return True
 
 # Modal Dialogs ---------------------------------------------------------------
 #------------------------------------------------------------------------------
