@@ -63,7 +63,7 @@ def _import_wx():
     global _wx
     try:
         # Import wx once and for all
-        WXVER = '3.0.2.0'
+        WXVER = '2.8.12.1'# '2.9.5.0'
         import wxversion
         if wxversion.checkInstalled(WXVER):
             wxversion.select(WXVER)

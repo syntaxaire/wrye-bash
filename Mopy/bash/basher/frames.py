@@ -95,8 +95,8 @@ class DocBrowser(BaltFrame):
         main_layout.add(self._doc_ctrl.container, weight=3)
 
         root_window.SplitVertically(mod_list_window, main_window, 250)
-        root_layout = VBox(self)
-        root_layout.add(root_window, weight=1, grow=True, border=4)
+        root_layout = HBox(root_window, default_weight=1, default_grow=True, default_border=4)
+        root_layout.add_many(mod_list_layout, main_layout)
         for btn in self._buttons:
             btn.Disable()
 
