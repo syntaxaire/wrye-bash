@@ -50,10 +50,9 @@ class ColorDialog(balt.Dialog):
         super(ColorDialog, self).__init__(parent=Link.Frame, resize=False)
         self.changes = dict()
         #--ComboBox
-        keys = [x for x in colors]
         def _display_text(k):
             return _(self._keys_to_tabs[k.split('.')[0]]) + colorInfo[k][0]
-        self.text_key = dict((_display_text(x), x) for x in keys)
+        self.text_key = dict((_display_text(x), x) for x in colors)
         colored = self.text_key.keys()
         colored.sort(key=unicode.lower)
         combo_text = colored[0]

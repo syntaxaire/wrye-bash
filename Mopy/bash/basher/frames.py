@@ -285,7 +285,7 @@ class DocBrowser(BaltFrame):
         bass.settings['bash.modDocs.show'] = False
         Link.Frame.docBrowser = None
         super(DocBrowser, self).OnCloseWindow()
-# OLD END: line 335
+
 #------------------------------------------------------------------------------
 _BACK, _FORWARD, _MOD_LIST, _RULE_SETS, _NOTES, _CONFIG, _SUGGEST, \
 _CRC, _VERSION, _SCAN_DIRTY, _COPY_TEXT, _UPDATE = range(12)

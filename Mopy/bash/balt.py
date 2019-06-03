@@ -926,7 +926,7 @@ class HtmlCtrl(object):
     def __init__(self, parent):
         # super(HtmlCtrl, self).__init__(parent)
         # init the fallback/plaintext widget
-        self._text_ctrl = TextCtrl(parent, multiline=True, autotooltip=False)
+        self._text_ctrl = RoTextCtrl(parent, multiline=True, autotooltip=False)
         self._text_ctrl.SetEditable(False)
         back = forward = None
         items = [self._text_ctrl]
