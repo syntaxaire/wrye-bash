@@ -101,7 +101,7 @@ def setup_parser(parser):
     )
     version_group = parser.add_mutually_exclusive_group()
     nightly_version = "{}.{}".format(
-        bass.AppVersion, datetime.datetime.utcnow().strftime("%Y%m%d%H%M")
+        bass.AppVersion.split('.')[0], datetime.datetime.utcnow().strftime("%Y%m%d%H%M")
     )
     version_group.add_argument(
         "-n",
@@ -124,6 +124,13 @@ def setup_parser(parser):
         "--release",
         dest="version",
         help="Specifies the release number for Wrye Bash that you are packaging.",
+    )
+    parser.add_argument(
+        "-c",
+        "--commit",
+        action="store_true",
+        dest="commit",
+        help="Create a commit with the version used to build."
     )
     parser.add_argument(
         "-o",
@@ -694,7 +701,7 @@ def pack_installer(
 
 
 @contextmanager
-def update_file_version(version):
+def update_file_version(version, commit=False):
     fname = "bass.py"
     orig_path = os.path.join(MOPY_PATH, "bash", fname)
     tmpdir = tempfile.mkdtemp()
@@ -708,10 +715,30 @@ def update_file_version(version):
         fopen.seek(0)
         fopen.truncate(0)
         fopen.write(content)
+        fopen.flush()
+        os.fsync(fopen.fileno())
+    if commit:
+        repo = pygit2.Repository(ROOT_PATH)
+        user = repo.default_signature
+        parent = [repo.head.target]
+        rel_path = os.path.relpath(orig_path, repo.workdir).replace('\\', '/')
+        if repo.status_file(rel_path) == pygit2.GIT_STATUS_WT_MODIFIED:
+            repo.index.add(rel_path)
+            tree = repo.index.write_tree()
+            repo.create_commit(
+                'HEAD',
+                user,
+                user,
+                version,
+                tree,
+                parent
+            )
+            repo.index.write()
     try:
         yield
     finally:
-        cpy(bck_path, orig_path)
+        if not commit:
+            cpy(bck_path, orig_path)
         rm(tmpdir)
 
 
@@ -749,7 +776,7 @@ def main(args):
     LOGGER.info("Building on Python {}".format(sys.version))
     if sys.version_info[0:3] < (2, 7, 12):
         raise OSError("You must run at least Python 2.7.12 to package Wrye Bash.")
-    with handle_apps_folder(), update_file_version(args.version):
+    with handle_apps_folder(), update_file_version(args.version, args.commit):
         # Get repository files
         all_files = get_git_files(args.git, args.version)
         # Add the LOOT API binaries to all_files
