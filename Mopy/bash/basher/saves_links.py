@@ -781,7 +781,7 @@ class _Save_StatCosave(AppendableLink, OneItemLink):
             log = bolt.LogFile(out)
             self._cosave.dump_to_log(log, self._selected_info.header.masters)
             text = log.out.getvalue()
-        self._showLog(text, title=self._cosave.cosave_path.tail.s,
+        self._showLog(text, title=self._cosave.abs_path.tail.s,
                       fixedFont=False)
 
 #------------------------------------------------------------------------------
