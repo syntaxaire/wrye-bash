@@ -216,7 +216,9 @@ class DocBrowser(BaltFrame):
         docPath = self.docs.get(self.modName)
         self.plainText.DiscardEdits()
         if not docPath:
-            raise BoltError(_(u'Filename not defined.'))
+            # FIXME(inf) working around wx3 behavior change / bug(?)
+            # raise BoltError(_(u'Filename not defined.'))
+            return
         with docPath.open('w',encoding='utf-8-sig') as out:
             out.write(self.plainText.GetValue())
         if self.docIsWtxt:
