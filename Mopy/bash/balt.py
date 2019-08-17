@@ -914,7 +914,7 @@ def showInfo(parent,message,title=_(u'Information'),**kwdargs):
 
 #------------------------------------------------------------------------------
 
-class HtmlCtrl(wx.Window):
+class HtmlCtrl(object):
     """
     TODO:
       * buttons disabled when no forward/back history
@@ -924,20 +924,20 @@ class HtmlCtrl(wx.Window):
     def html_lib_available(): return bool(_wx_html2)
 
     def __init__(self, parent):
-        super(HtmlCtrl, self).__init__(parent)
+        # super(HtmlCtrl, self).__init__(parent)
         # init the fallback/plaintext widget
-        self._text_ctrl = TextCtrl(self, multiline=True, autotooltip=False)
+        self._text_ctrl = TextCtrl(parent, multiline=True, autotooltip=False)
         self._text_ctrl.SetEditable(False)
         back = forward = None
         items = [self._text_ctrl]
         if _wx_html2:
-            self._html_ctrl = _wx_html2.WebView.New(self,
+            self._html_ctrl = _wx_html2.WebView.New(parent,
                                            style=wx.NO_FULL_REPAINT_ON_RESIZE)
             items.append(self._html_ctrl)
             self._text_ctrl.Disable()
             back = self._html_ctrl.GoBack
             forward = self._html_ctrl.GoForward
-        self.container = vSizer(*[(item, 3, wx.GROW|wx.ALL) for item in items])
+        self.container = vSizer(*[(item, 3, wx.EXPAND|wx.LEFT) for item in items])
         def _make_button(bitmap_id, callback):
             return bitmapButton(parent, wx.ArtProvider_GetBitmap(bitmap_id,
                            wx.ART_HELP_BROWSER, (16, 16)), onBBClick=callback)
@@ -949,7 +949,7 @@ class HtmlCtrl(wx.Window):
         # else:
         #     self.container.Hide(self._text_ctrl)
             # self.container.Layout()
-        self.SetSizer(self.container)
+        # self.SetSizer(self.container)
         self.switch_to_text() # default to text
 
     @property
@@ -984,7 +984,7 @@ class HtmlCtrl(wx.Window):
         self.container.Hide(self._text_ctrl)
         self._html_ctrl.Enable()
         self._text_ctrl.Disable()
-        self.Layout()
+        # self.Layout()
 
     def switch_to_text(self):
         if not _wx_html2: return
@@ -992,7 +992,7 @@ class HtmlCtrl(wx.Window):
         self.container.Show(self._text_ctrl)
         self._html_ctrl.Disable()
         self._text_ctrl.Enable()
-        self.Layout()
+        # self.Layout()
 
     def get_buttons(self):
         return self._prev_button, self._next_button

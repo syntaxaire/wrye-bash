@@ -91,7 +91,7 @@ class DocBrowser(BaltFrame):
         main_layout = VBox(main_window, spacing=4, default_grow=True)
         main_layout.add(button_row_sizer)
         main_layout.add(self._doc_name_box)
-        main_layout.add(self._doc_ctrl, weight=3)
+        main_layout.add(self._doc_ctrl.container, weight=3)
 
         root_window.SplitVertically(mod_list_window, main_window, 250)
         root_layout = VBox(self)
