@@ -37,7 +37,7 @@ import bosh, balt, bolt, bush
 from balt import Image, set_event_hook, Events
 from gui.layouts import LayoutOptions, HBoxedLayout, HLayout, GridLayout, \
     Stretch, VLayout, CENTER, RIGHT, BOTTOM
-from gui import CheckBox, Label, TextArea
+from gui import CheckBox, HyperlinkLabel, Label, TextArea
 from env import get_file_version
 import StringIO
 import traceback
@@ -466,26 +466,23 @@ class PageVersions(PageInstaller):
                                      stretch_cols=[0, 1, 2, 3])
         versions_layout.append_row([None, Label(self, _(u'Need')),
                                     Label(self, _(u'Have'))])
-
-        # TODO(inf) de-wx! HyperlinkLabel? URLLabel?
-        def _hyperlink(label, url): return wx.HyperlinkCtrl(self, balt.defId,
-                                                       label=label, url=url)
         # Game
         if bush.game.patchURL != u'':
-            linkGame = _hyperlink(bush.game.displayName, bush.game.patchURL)
-            linkGame.SetVisitedColour(linkGame.GetNormalColour())
+            linkGame = HyperlinkLabel(self, bush.game.displayName,
+                                      bush.game.patchURL,
+                                      always_unvisited=True)
         else:
             linkGame = Label(self, bush.game.displayName)
-        linkGame.SetToolTip(balt.tooltip(bush.game.patchTip))
+        linkGame.tooltip = bush.game.patchTip
         versions_layout.append_row([linkGame, Label(self, gameNeed),
                                     Label(self, gameHave),
                                     balt.staticBitmap(self, bmp[bGameOk])])
         def _link_row(tool, tool_name, need, have, ok, title=None, url=None,
                       tooltip=None):
             if tool is None or tool_name != u'':
-                link = _hyperlink(title or tool.long_name, url or tool.url)
-                link.SetVisitedColour(link.GetNormalColour())
-                link.SetToolTip(balt.tooltip(tooltip or tool.url_tip))
+                link = HyperlinkLabel(self, title or tool.long_name,
+                                      url or tool.url, always_unvisited=True)
+                link.tooltip = tooltip or tool.url_tip
                 versions_layout.append_row([link, Label(self, need),
                                             Label(self, have),
                                             balt.staticBitmap(self, bmp[ok])])
