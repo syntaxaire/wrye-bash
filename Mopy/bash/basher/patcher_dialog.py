@@ -32,10 +32,10 @@ from datetime import timedelta
 from . import BashFrame ##: drop this - decouple !
 from .. import bass, bosh, bolt, balt, env, load_order
 from ..balt import Link, Resources, set_event_hook, Events, HorizontalLine
+from ..gui import CancelButton, DeselectAllButton, OkButton, OpenButton, \
+    RevertToSavedButton, RevertButton, SaveAsButton, SelectAllButton
 from ..gui.layouts import HLayout, LayoutOptions, Stretch, VLayout
-from ..gui import CancelButton, DeselectAllButton, Label, OkButton,\
-    OpenButton, RevertToSavedButton, RevertButton, SaveAsButton, \
-    SelectAllButton
+from ..gui.text_components import Label
 from ..bolt import SubProgress, GPath, Path
 from ..exception import BoltError, CancelError, FileEditError, \
     PluginsFullError, SkipError

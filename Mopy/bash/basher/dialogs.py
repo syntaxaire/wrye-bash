@@ -30,10 +30,10 @@ from .constants import colorInfo, settingDefaults, installercons
 from .. import bass, balt, bosh, bolt, bush, env
 from ..balt import Link, colors, Image, bell, Resources, set_event_hook, \
     Events, ColorPicker
+from ..gui import ApplyButton, Button, CancelButton, CheckBox, OkButton
 from ..gui.layouts import GridLayout, HLayout, LayoutOptions, Stretch, \
     VLayout, RIGHT, BOTTOM, CENTER
-from ..gui import ApplyButton, Button, CancelButton, CheckBox, Label, \
-    OkButton, TextArea, TextField
+from ..gui.text_components import Label, TextArea, TextField
 from ..bosh import faces
 
 class ColorDialog(balt.Dialog):

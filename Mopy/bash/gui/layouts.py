@@ -17,14 +17,21 @@
 #  along with Wrye Bash; if not, write to the Free Software Foundation,
 #  Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
-#  Wrye Bash copyright (C) 2005-2009 Wrye, 2010-2015 Wrye Bash Team
+#  Wrye Bash copyright (C) 2005-2009 Wrye, 2010-2019 Wrye Bash Team
 #  https://github.com/wrye-bash
 #
 # =============================================================================
 
-from . import _AWidget
+"""This module defines layout components that define how components will fit
+together to create a GUI. In doing so, it is also responsible for making the
+rest of the gui modules work by chaining the _AWidget-based high-level
+components into actual wx calls."""
+
+__author__ = 'nycz'
 
 import wx as _wx
+
+from . import _AWidget
 
 
 CENTER, LEFT, RIGHT, TOP, BOTTOM = 'center', 'left', 'right', 'top', 'bottom'

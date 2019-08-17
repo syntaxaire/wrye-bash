@@ -35,9 +35,10 @@ import wx
 import wx.wizard as wiz     # wxPython wizard class
 import bosh, balt, bolt, bush
 from balt import Image, set_event_hook, Events
-from gui.layouts import LayoutOptions, HBoxedLayout, HLayout, GridLayout, \
+from gui import CheckBox
+from gui.layouts import HBoxedLayout, HLayout, GridLayout, LayoutOptions, \
     Stretch, VLayout, CENTER, RIGHT, BOTTOM
-from gui import CheckBox, HyperlinkLabel, Label, TextArea
+from gui.text_components import HyperlinkLabel, Label, TextArea
 from env import get_file_version
 import StringIO
 import traceback

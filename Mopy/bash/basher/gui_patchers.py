@@ -30,8 +30,9 @@ import wx
 from .. import bass, bosh, bush, balt, load_order, bolt, exception
 from ..balt import fill, Links, SeparatorLink, CheckLink, Link
 from ..bolt import GPath
-from ..gui.layouts import HBoxedLayout, VLayout, LayoutOptions, Spacer, TOP
-from ..gui import Button, CheckBox, TextArea, Label
+from ..gui import Button, CheckBox
+from ..gui.layouts import HBoxedLayout, LayoutOptions, Spacer, VLayout, TOP
+from ..gui.text_components import Label, TextArea
 from ..patcher import patch_files
 
 reCsvExt = re.compile(ur'\.csv$', re.I | re.U)

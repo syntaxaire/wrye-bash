@@ -29,10 +29,10 @@ from collections import OrderedDict
 import wx
 from .. import bass, balt, bosh, bolt, load_order
 from ..balt import bell, Link, BaltFrame, Resources, HtmlCtrl, set_event_hook
-from ..gui.layouts import HLayout, VLayout, GridLayout, LayoutOptions, \
-    Spacer, Stretch, CENTER
-from ..gui import Button, CancelButton, CheckBox, Label, SaveButton, \
-    TextArea, TextField, ToggleButton
+from ..gui import Button, CancelButton, CheckBox, SaveButton, ToggleButton
+from ..gui.layouts import GridLayout, HLayout, LayoutOptions, Spacer, \
+    Stretch, VLayout, CENTER
+from ..gui.text_components import Label, TextArea, TextField
 from ..bolt import GPath
 from ..bosh import omods
 

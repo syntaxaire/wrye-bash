@@ -85,10 +85,10 @@ from ..balt import spinCtrl
 from ..balt import colors, images, Image, Resources
 from ..balt import Links, ItemLink
 
+from ..gui import Button, CancelButton, CheckBox, SaveButton
 from ..gui.layouts import HLayout, LayoutOptions, Spacer, Stretch, VLayout, \
     RIGHT, TOP
-from ..gui import Button, CancelButton, CheckBox, Label, SaveButton, \
-    TextArea, TextField
+from ..gui.text_components import Label, TextArea, TextField
 
 # Constants -------------------------------------------------------------------
 from .constants import colorInfo, settingDefaults, karmacons, installercons
