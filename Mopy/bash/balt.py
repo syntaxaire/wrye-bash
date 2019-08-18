@@ -989,9 +989,9 @@ class ListEditor(Dialog):
         self.gInfoBox = None # type: TextArea
         if data.showInfo:
             editable = not self._listEditorData.infoReadOnly
-            callback = self.OnInfoEdit if editable else None
-            self.gInfoBox = TextArea(self, editable=editable,
-                                         on_text_change=callback)
+            self.gInfoBox = TextArea(self, editable=editable)
+            if editable:
+                self.gInfoBox.on_text_changed.subscribe(self.OnInfoEdit)
             # TODO(nycz): GUI size=(130, -1), SUNKEN_BORDER
         #--Buttons
         buttonSet = [
@@ -1075,13 +1075,13 @@ class ListEditor(Dialog):
             self.gInfoBox.text_content = u''
 
     #--Show Info
-    def OnInfoEdit(self):
+    def OnInfoEdit(self, new_text):
         """Info box text has been edited."""
         selections = self.listBox.GetSelections()
         if not selections: return bell()
         item = self._list_items[selections[0]]
         if self.gInfoBox.modified:
-            self._listEditorData.setInfo(item, self.gInfoBox.text_content)
+            self._listEditorData.setInfo(item, new_text)
 
     #--Save/Cancel
     def DoSave(self):

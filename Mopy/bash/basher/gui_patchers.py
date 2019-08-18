@@ -161,7 +161,7 @@ class _AliasesPatcherPanel(_PatcherPanel):
         #    _(u"Example Mod 1.esp >> Example Mod 1.2.esp"))
         #--Aliases Text
         self.gAliases = TextArea(gConfigPanel)
-        self.gAliases.bind('lose_focus', self.OnEditAliases)
+        self.gAliases.on_focus_lost.subscribe(self.OnEditAliases)
         self.SetAliasText()
         #--Sizing
         self.main_layout.add((self.gAliases,
