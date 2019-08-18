@@ -1,0 +1,4 @@
+de-wx TODO:
+ - Place de-wx! comments where needed
+ - Search for TODO(nycz) and FIXME(nycz) and implement them
+ - Applying colors in the color config dialog hard-crashes, need to wrap balt.ComboBox
