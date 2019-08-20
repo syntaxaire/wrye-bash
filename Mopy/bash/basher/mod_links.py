@@ -2052,6 +2052,8 @@ class Mod_Scripts_Export(_Mod_Export_Link):
         gskip.text_content = bass.settings['bash.mods.export.skip']
         gdeprefix.text_content = bass.settings['bash.mods.export.deprefix']
         gskipcomments.checked = bass.settings['bash.mods.export.skipcomments']
+        ok_button = OkButton(dialog)
+        ok_button.on_clicked.subscribe(OnOk)
         VLayout(border=6, spacing=4, items=[
             Label(dialog, _(u'Skip prefix (leave blank to not skip any), '
                             u'non-case sensitive):')),
@@ -2066,8 +2068,7 @@ class Mod_Scripts_Export(_Mod_Export_Link):
             Spacer(10),
             gskipcomments,
             Stretch(),
-            (HLayout(spacing=4, items=[
-                OkButton(dialog, on_click=OnOk), CancelButton(dialog)]),
+            (HLayout(spacing=4, items=[ok_button, CancelButton(dialog)]),
              LayoutOptions(h_align=RIGHT))
         ]).apply_to(dialog)
         with dialog: questions = dialog.ShowModal()
