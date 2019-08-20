@@ -238,8 +238,8 @@ class _ListPatcherPanel(_PatcherPanel):
             self.SetItems(self.getAutoItems())
         else:
             self.gAuto = CheckBox(gConfigPanel, _(u'Automatic'),
-                                  on_toggle=self.OnAutomatic,
                                   checked=self.autoIsChecked)
+            self.gAuto.on_checked.subscribe(self.OnAutomatic)
             self.gAdd = Button(gConfigPanel, _(u'Add'))
             self.gAdd.on_clicked.subscribe(self.OnAdd)
             self.gRemove = Button(gConfigPanel, _(u'Remove'))
