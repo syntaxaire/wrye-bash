@@ -26,6 +26,7 @@ __author__ = 'nycz, Infernio'
 
 import wx as _wx
 
+from exception import AbstractError
 from .events import EventHandler
 
 # Utilities -------------------------------------------------------------------
@@ -112,11 +113,11 @@ class _AWidget(object):
         return self._native_widget.IsEnabled()
 
     @enabled.setter
-    def enabled(self, enabled): # type: (bool) -> None
+    def enabled(self, is_enabled): # type: (bool) -> None
         """Enables or disables this widget based on the specified parameter.
 
-        :param enabled: Whether or not to enable this widget."""
-        self._native_widget.Enable(enabled)
+        :param is_enabled: Whether or not to enable this widget."""
+        self._native_widget.Enable(is_enabled)
 
     @property
     def tooltip(self): # type: () -> unicode
@@ -275,43 +276,7 @@ class ApplyButton(Button):
     _id = _wx.ID_APPLY
     default_label = _(u'Apply')
 
-class ToggleButton(_AButton):
-    """Represents a button that can be toggled on or off."""
-    def __init__(self, parent, label=u'', on_toggle=None, tooltip=None):
-        """Creates a new ToggleButton with the specified properties.
-
-        :param parent: The object that the button belongs to.
-        :param label: The text shown on the button.
-        :param on_toggle: A callback to execute when the button is clicked.
-                          Takes a single parameter, a boolean that is True if
-                          the button is on.
-        :param tooltip: A tooltip to show when the user hovers over the
-                        button."""
-        super(ToggleButton, self).__init__()
-        self._native_widget = _wx.ToggleButton(parent, _wx.ID_ANY,
-                                               label=label, name=u'button')
-        if on_toggle:
-            def _toggle_callback(_event): # type: (_wx.Event) -> None
-                on_toggle(self._native_widget.GetValue())
-            self._native_widget.Bind(_wx.EVT_TOGGLEBUTTON, _toggle_callback)
-        if tooltip:
-            self.tooltip = tooltip
-
-    @property
-    def toggled(self): # type: () -> bool
-        """Returns True if this button is toggled on.
-
-        :return: True if this button is toggled on."""
-        return self._native_widget.GetValue()
-
-    @toggled.setter
-    def toggled(self, value): # type: (bool) -> None
-        """Toggles this button on if the specified parameter is True.
-
-        :param value: Whether to toggle this button on or off."""
-        self._native_widget.SetValue(value)
-
-class CheckBox(_AButton):
+class CheckBox(_AWidget):
     """Represents a simple two-state checkbox."""
     def __init__(self, parent, label=u'', on_toggle=None, tooltip=None,
                  checked=False):
@@ -334,19 +299,20 @@ class CheckBox(_AButton):
             self._native_widget.Bind(_wx.EVT_CHECKBOX, _toggle_callback)
         if tooltip:
             self.tooltip = tooltip
-        self.checked = checked
+        self.is_checked = checked
 
     @property
-    def checked(self): # type: () -> bool
+    def is_checked(self): # type: () -> bool
         """Returns True if this checkbox is checked.
 
         :return: True if this checkbox is checked."""
         return self._native_widget.GetValue()
 
-    @checked.setter
-    def checked(self, value): # type: (bool) -> None
-        """Checks or unchecks this checkbox depending on the specified
-        parameter.
+    @is_checked.setter
+    def is_checked(self, new_state): # type: (bool) -> None
+        """Marks this checkbox as either checked or unchecked, depending on the
+        value of new_state.
 
-        :param value: Whether to check or uncheck this checkbox."""
-        self._native_widget.SetValue(value)
+        :param new_state: True if this checkbox should be checked, False if it
+                          should be unchecked."""
+        self._native_widget.SetValue(new_state)
