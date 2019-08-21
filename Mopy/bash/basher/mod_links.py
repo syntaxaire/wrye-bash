@@ -39,7 +39,8 @@ from .. import bass, bosh, bolt, balt, bush, parsers, load_order
 from ..balt import ItemLink, Link, CheckLink, EnabledLink, AppendableLink,\
     TransLink, RadioLink, SeparatorLink, ChoiceLink, OneItemLink, Image, \
     ListBoxes
-from ..gui import CancelButton, CheckBox, OkButton
+from ..gui import CheckBox
+from ..gui.buttons import CancelButton, OkButton
 from ..gui.layouts import HLayout, LayoutOptions, Spacer, Stretch, VLayout, \
     RIGHT
 from ..gui.text_components import Label, TextField

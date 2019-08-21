@@ -22,6 +22,10 @@
 #
 # =============================================================================
 
+"""This module houses parts of the GUI code that form the basis for the the
+more specialized parts (e.g. _AWidget) as well as all parts that don't fit
+anywhere else."""
+
 __author__ = 'nycz, Infernio'
 
 import wx as _wx
@@ -156,125 +160,7 @@ class _AWidget(object):
         self._native_widget.SetBackgroundColour(new_color)
         self._native_widget.Refresh()
 
-# Buttons ---------------------------------------------------------------------
-class _AButton(_AWidget):
-    """Abstract base class for all buttons."""
-    # TODO(inf) This will be expanded, don't remove
-
-class Button(_AButton):
-    """Represents a generic button that can be pressed, triggering an action.
-    You probably want one of the more specialized versions of this class
-    (e.g. OkButton or CancelButton).
-
-    Events:
-     - on_clicked(): Posted when the button is clicked."""
-    # The ID that will be passed to wx. Controls some OS-specific behavior,
-    # e.g. when pressing Tab
-    _id = _wx.ID_ANY
-    # The label to use when no label was explicitly specified. Set per class.
-    default_label = u''
-
-    def __init__(self, parent, label=u'', tooltip=None, default=False):
-        """Creates a new Button with the specified properties.
-
-        :param parent: The object that the button belongs to.
-        :param label: The text shown on the button.
-        :param tooltip: A tooltip to show when the user hovers over the button.
-        :param default: If set to True, this button will be the 'default',
-                        meaning that if a user selects nothing else and hits
-                        Enter, this button will activate."""
-        super(Button, self).__init__()
-        # Create native widget
-        if not label and self.__class__.default_label:
-            label = self.__class__.default_label
-        self._native_widget = _wx.Button(parent, self.__class__._id,
-                                         label=label, name=u'button')
-        if default:
-            self._native_widget.SetDefault()
-        if tooltip:
-            self.tooltip = tooltip
-        # Events
-        self.on_clicked = EventHandler(self._native_widget, _wx.EVT_BUTTON)
-
-class OkButton(Button):
-    """A button with the label 'OK'. Applies pending changes and closes the
-    dialog or shows that the user consented to something.
-
-    See Button for documentation on button events."""
-    _id = _wx.ID_OK
-    default_label = _(u'OK')
-
-class CancelButton(Button):
-    """A button with the label 'Cancel'. Rejects pending changes or aborts a
-    running process.
-
-    See Button for documentation on button events."""
-    _id = _wx.ID_CANCEL
-    default_label = _(u'Cancel')
-
-class SaveButton(Button):
-    """A button with the label 'Save'. Saves pending changes or edits by the
-    user.
-
-    See Button for documentation on button events."""
-    _id = _wx.ID_SAVE
-    default_label = _(u'Save')
-
-class SaveAsButton(Button):
-    """A button with the label 'Save As'. Behaves like the 'Save' button above,
-    but shows some type of prompt first, asking the user where to save."""
-    _id = _wx.ID_SAVEAS
-    default_label = _(u'Save As...')
-
-class RevertButton(Button):
-    """A button with the label 'Revert'. Resets pending changes back to the
-    default state or undoes any alterations made by the user.
-
-    See Button for documentation on button events."""
-    _id = _wx.ID_REVERT
-    default_label = _(u'Revert')
-
-class RevertToSavedButton(Button):
-    """A button with the label 'Revert to Saved'. Resets pending changes back
-    to the previous state or undoes one or more alterations made by the
-    user.
-
-    See Button for documentation on button events."""
-    _id = _wx.ID_REVERT_TO_SAVED
-    default_label = _(u'Revert to Saved')
-
-class OpenButton(Button):
-    """A button with the label 'Open'. Opens a file in an editor or displays
-    some other GUI component (i.e. 'open a window').
-
-    See Button for documentation on button events."""
-    _id = _wx.ID_OPEN
-    default_label = _(u'Open')
-
-class SelectAllButton(Button):
-    """A button with the label 'Select All'. Checks all elements in a
-    multi-element selection component.
-
-    See Button for documentation on button events."""
-    _id = _wx.ID_SELECTALL
-    default_label = _(u'Select All')
-
-class DeselectAllButton(Button):
-    """A button with the label 'Deselect All'. Unchecks all elements in a
-    multi-element selection component.
-
-    See Button for documentation on button events."""
-    _id = _wx.ID_SELECTALL
-    default_label = _(u'Deselect All')
-
-class ApplyButton(Button):
-    """A button with the label 'Apply'. Applies pending changes without closing
-    the dialog.
-
-    See Button for documentation on button events."""
-    _id = _wx.ID_APPLY
-    default_label = _(u'Apply')
-
+# Misc elements ---------------------------------------------------------------
 class CheckBox(_AWidget):
     """Represents a simple two-state checkbox.
 

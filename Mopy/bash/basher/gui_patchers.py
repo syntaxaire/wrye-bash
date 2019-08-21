@@ -30,7 +30,8 @@ import wx
 from .. import bass, bosh, bush, balt, load_order, bolt, exception
 from ..balt import fill, Links, SeparatorLink, CheckLink, Link
 from ..bolt import GPath
-from ..gui import Button, CheckBox
+from ..gui import CheckBox
+from ..gui.buttons import Button
 from ..gui.layouts import HBoxedLayout, LayoutOptions, Spacer, VLayout, TOP
 from ..gui.text_components import Label, TextArea
 from ..patcher import patch_files

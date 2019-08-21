@@ -85,7 +85,8 @@ from ..balt import spinCtrl
 from ..balt import colors, images, Image, Resources
 from ..balt import Links, ItemLink
 
-from ..gui import Button, CancelButton, CheckBox, SaveButton
+from ..gui import CheckBox
+from ..gui.buttons import Button, CancelButton, SaveButton
 from ..gui.layouts import HLayout, LayoutOptions, Spacer, Stretch, VLayout, \
     RIGHT, TOP
 from ..gui.text_components import Label, TextArea, TextField

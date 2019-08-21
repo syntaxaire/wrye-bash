@@ -29,7 +29,8 @@ from collections import OrderedDict
 import wx
 from .. import bass, balt, bosh, bolt, load_order
 from ..balt import bell, Link, BaltFrame, Resources, HtmlCtrl, set_event_hook
-from ..gui import CheckBox, Button, CancelButton, CheckBox, SaveButton
+from ..gui import CheckBox
+from ..gui.buttons import Button, CancelButton, SaveButton
 from ..gui.layouts import GridLayout, HLayout, LayoutOptions, Spacer, \
     Stretch, VLayout, CENTER
 from ..gui.text_components import Label, TextArea, TextField

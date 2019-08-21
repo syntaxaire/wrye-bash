@@ -49,7 +49,8 @@ from wx.lib.embeddedimage import PyEmbeddedImage
 import wx.lib.newevent
 import wx.wizard as wiz
 #--gui
-from gui import Button, CancelButton, CheckBox, OkButton
+from gui import CheckBox
+from gui.buttons import Button, CancelButton, OkButton
 from gui.layouts import HBoxedLayout, HLayout, LayoutOptions, Stretch, \
     VLayout, TOP, RIGHT
 from gui.text_components import Label, TextArea
