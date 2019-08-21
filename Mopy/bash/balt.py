@@ -50,7 +50,8 @@ import wx.lib.newevent
 import wx.wizard as wiz
 #--gui
 from gui import CheckBox
-from gui.buttons import Button, CancelButton, OkButton
+from gui.buttons import BackwardButton, Button, CancelButton, ForwardButton, \
+    OkButton
 from gui.layouts import HBoxedLayout, HLayout, LayoutOptions, Stretch, \
     VLayout, TOP, RIGHT
 from gui.text_components import Label, TextArea
@@ -379,16 +380,6 @@ class ComboBox(wx.ComboBox):
             self.SetToolTip(tooltip(u''))
         event.Skip()
 
-def bitmapButton(parent, bitmap, button_tip=None, pos=defPos, size=defSize,
-                 style=wx.BU_AUTODRAW, val=defVal, name=u'button',
-                 onBBClick=None, onRClick=None):
-    """Creates a button, binds click function, then returns bound button."""
-    gButton = wx.BitmapButton(parent,defId,bitmap,pos,size,style,val,name)
-    if onBBClick: gButton.Bind(wx.EVT_BUTTON, lambda __event: onBBClick())
-    if onRClick: gButton.Bind(wx.EVT_CONTEXT_MENU,onRClick)
-    if button_tip: gButton.SetToolTip(tooltip(button_tip))
-    return gButton
-
 def ok_and_cancel_group(parent, on_ok=None):
     ok_button = OkButton(parent)
     ok_button.on_clicked.subscribe(on_ok)
@@ -685,11 +676,10 @@ class HtmlCtrl(wx.Window):
         # init the fallback/plaintext widget
         self._text_ctrl = TextArea(self,editable=False,auto_tooltip=False)
         items = [self._text_ctrl]
-        def _make_button(bitmap_id, callback):
-            return bitmapButton(parent, wx.ArtProvider_GetBitmap(
-                bitmap_id, wx.ART_HELP_BROWSER, (16, 16)), onBBClick=callback)
-        self._prev_button = _make_button(wx.ART_GO_BACK, self.go_back)
-        self._next_button = _make_button(wx.ART_GO_FORWARD, self.go_forward)
+        self._prev_button = BackwardButton(parent)
+        self._prev_button.on_clicked.subscribe(self.go_back)
+        self._next_button = ForwardButton(parent)
+        self._next_button.on_clicked.subscribe(self.go_forward)
         if _wx_html2:
             self._html_ctrl = _wx_html2.WebView.New(self)
             self._html_ctrl.Bind(
@@ -715,9 +705,9 @@ class HtmlCtrl(wx.Window):
             self._html_ctrl.Show(enable_html)
         self._text_ctrl.enabled = not enable_html
         self._text_ctrl.visible = not enable_html
-        self._prev_button.Enable(enable_html and self._html_ctrl.CanGoBack())
-        self._next_button.Enable(enable_html and
-                                 self._html_ctrl.CanGoForward())
+        self._prev_button.enabled = enable_html and self._html_ctrl.CanGoBack()
+        self._next_button.enabled = enable_html and \
+                                    self._html_ctrl.CanGoForward()
 
     def go_back(self):
         # Sanity check, shouldn't ever hit this
@@ -2322,7 +2312,7 @@ class Link(object):
         In modlist/installers it's a list<Path> while in subpackage it's the
         index of the right-clicked item. In main (column header) menus it's
         the column clicked on or the first column. Set in Links.PopupMenu().
-        :type window: UIList | wx.Panel | wx.Button | DnDStatusBar
+        :type window: UIList | wx.Panel | gui.buttons.Button | DnDStatusBar
         :type selection: list[Path | unicode | int] | int | None
         """
         self.window = window
@@ -2887,6 +2877,9 @@ class INIListCtrl(wx.ListCtrl):
     def _get_selected_line(self, index): raise AbstractError
 
 # Status bar ------------------------------------------------------------------
+# TODO(inf) de_wx! Wrap wx.StatusBar
+# It's currently full of _native_widget hacks to keep it functional, this one
+# is the next big step
 class DnDStatusBar(wx.StatusBar):
     buttons = Links()
 
@@ -2908,28 +2901,29 @@ class DnDStatusBar(wx.StatusBar):
     def iconsSize(self): return _settings['bash.statusbar.iconSize'] + 8
 
     def _addButton(self, link):
-        gButton = link.GetBitmapButton(self, style=wx.NO_BORDER)
+        gButton = link.GetBitmapButton(self)
         if gButton:
             self.buttons.append(gButton)
             # TODO(inf) Test in wx3
             # DnD events (only on windows, CaptureMouse works badly in wxGTK)
             if wx.Platform == '__WXMSW__':
-                gButton.Bind(wx.EVT_LEFT_DOWN, self.OnDragStart)
-                gButton.Bind(wx.EVT_LEFT_UP, self.OnDragEnd)
-                gButton.Bind(wx.EVT_MOUSE_CAPTURE_LOST, self.OnDragEndForced)
-                gButton.Bind(wx.EVT_MOTION, self.OnDrag)
+                gButton._native_widget.Bind(wx.EVT_LEFT_DOWN, self.OnDragStart)
+                gButton._native_widget.Bind(wx.EVT_LEFT_UP, self.OnDragEnd)
+                gButton._native_widget.Bind(wx.EVT_MOUSE_CAPTURE_LOST,
+                                            self.OnDragEndForced)
+                gButton._native_widget.Bind(wx.EVT_MOTION, self.OnDrag)
 
     def _getButtonIndex(self, mouseEvent):
         id_ = mouseEvent.GetId()
         for i, button in enumerate(self.buttons):
-            if button.GetId() == id_:
+            if button._native_widget.GetId() == id_:
                 x = mouseEvent.GetPosition()[0]
                 delta = x / self.iconsSize
                 if abs(x) % self.iconsSize > self.iconsSize:
                     delta += x / abs(x)
                 i += delta
                 if i < 0: i = 0
-                elif i > len(self.buttons): i = len(self.buttons)
+                elif i >= len(self.buttons): i = len(self.buttons) - 1
                 return i
         return wx.NOT_FOUND
 
@@ -2938,7 +2932,7 @@ class DnDStatusBar(wx.StatusBar):
         if self.dragging != wx.NOT_FOUND:
             self.dragStart = event.GetPosition()[0]
             button = self.buttons[self.dragging]
-            button.CaptureMouse()
+            button._native_widget.CaptureMouse()
         event.Skip()
 
     def OnDragEndForced(self, event):
@@ -2973,8 +2967,8 @@ class DnDStatusBar(wx.StatusBar):
             # -*- Rest of hacky code -*-
             if released != wx.NOT_FOUND:
                 evt = wx.CommandEvent(wx.wxEVT_COMMAND_BUTTON_CLICKED,
-                                      button.GetId())
-                wx.PostEvent(button, evt)
+                                      button._native_widget.GetId())
+                wx.PostEvent(button._native_widget, evt)
         event.Skip()
 
     def OnDrag(self, event):
@@ -3005,7 +2999,7 @@ class DnDStatusBar(wx.StatusBar):
         rect = self.GetFieldRect(0)
         (xPos, yPos) = (rect.x + 4, rect.y + 2)
         for button in self.buttons:
-            button.SetPosition((xPos, yPos))
+            button.position = (xPos, yPos)
             xPos += self.iconsSize
         if event: event.Skip()
 

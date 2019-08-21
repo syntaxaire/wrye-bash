@@ -160,6 +160,23 @@ class _AWidget(object):
         self._native_widget.SetBackgroundColour(new_color)
         self._native_widget.Refresh()
 
+    @property
+    def position(self): # leaving out type here - without typing module,
+                        # PyCharm's auto-inferred type is smarter
+        """Returns the X and Y position of this widget as a tuple.
+
+        :return: A tuple containing the X and Y position of this this widget
+                 as two integers."""
+        curr_pos = self._native_widget.GetPosition()
+        return curr_pos.x, curr_pos.y
+
+    @position.setter
+    def position(self, new_position): # type: (tuple) -> None
+        """Changes the X and Y position of this widget to the specified values.
+
+        :param new_position: A tuple of two integers, X and Y."""
+        self._native_widget.Move(new_position)
+
 # Misc elements ---------------------------------------------------------------
 class CheckBox(_AWidget):
     """Represents a simple two-state checkbox.
