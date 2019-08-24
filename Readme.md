@@ -21,8 +21,11 @@ tested on (previous versions or latest versions may or may not work):
 * Fallout 3 (patch 1.7.0.3)
 * Fallout New Vegas (patch 1.4.0.525)
 * Skyrim (patch 1.9.36.0)
+* Enderal (patch 1.5.7.0)
 * Fallout 4 (patch 1.10.138.0)
+* Fallout 4 VR (patch 1.2.72.0)
 * Skyrim Special Edition (patch 1.5.80.0)
+* Skyrim VR (patch 1.4.15.0)
 
 ### Download
 
@@ -30,6 +33,7 @@ tested on (previous versions or latest versions may or may not work):
 * [Fallout 3][3]
 * [Fallout New Vegas][4]
 * [Skyrim Nexus][5]
+* [Enderal Nexus][7] (not yet uploaded)
 * [Fallout 4 Nexus][6]
 * [Skyrim Special Edition Nexus][7]
 * [Github][8] (all releases)
