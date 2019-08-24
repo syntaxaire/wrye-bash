@@ -674,13 +674,12 @@ class HtmlCtrl(wx.Window):
     def __init__(self, parent):
         super(HtmlCtrl, self).__init__(parent)
         # init the fallback/plaintext widget
-        self._text_ctrl = TextArea(self,editable=False,auto_tooltip=False)
+        self._text_ctrl = TextArea(self, editable=False, auto_tooltip=False)
         items = [self._text_ctrl]
         self._prev_button = BackwardButton(parent)
-        self._prev_button.on_clicked.subscribe(self.go_back)
         self._next_button = ForwardButton(parent)
-        self._next_button.on_clicked.subscribe(self.go_forward)
         if _wx_html2:
+            # TODO(inf) de-wx! (see _update_buttons, ugly)
             self._html_ctrl = _wx_html2.WebView.New(self)
             self._html_ctrl.Bind(
                 _wx_html2.EVT_WEBVIEW_LOADED,
@@ -690,6 +689,8 @@ class HtmlCtrl(wx.Window):
                 lambda event: self._open_in_external(event.GetURL()))
             items.append(self._html_ctrl)
             self._text_ctrl.enabled = False
+            self._prev_button.on_clicked.subscribe(self.go_back)
+            self._next_button.on_clicked.subscribe(self.go_forward)
         VLayout(default_weight=4, default_fill=True,
                 items=items).apply_to(self)
         self.switch_to_text() # default to text
