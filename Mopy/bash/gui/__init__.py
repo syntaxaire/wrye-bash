@@ -77,6 +77,24 @@ class _AComponent(object):
         methods of _AComponent's subclasses."""
         self._native_widget = None  # type: _wx.Window
 
+    @staticmethod
+    def _resolve(obj):
+        """Resolves the specified object down to a wx object. If obj is a wx
+        object already, then this just returns it. If obj is a component,
+        this returns its _native_widget object. If obj is anything else, this
+        raises a RuntimeError. The primary usage of this method is to allow
+        both wx objects and components as parents.
+
+        :param obj: The object to resolve.
+        :return: The resolved wx object.
+        """
+        if isinstance(obj, _AComponent):
+            return obj._native_widget
+        elif isinstance(obj, _wx.Window):
+            return obj
+        else:
+            raise RuntimeError(u'Failed to resolve object to wx object.')
+
     @property
     def component_name(self): # type: () -> unicode
         """Returns the name of this widget.
@@ -139,7 +157,7 @@ class _AComponent(object):
         if not new_tooltip:
             self._native_widget.UnsetToolTip()
         else:
-            # TODO(inf) textwrap.fill(text, 50)
+            # TODO(inf) textwrap.fill(text, 50)?
             self._native_widget.SetToolTipString(new_tooltip)
 
     # TODO: use a custom color class here
@@ -188,14 +206,15 @@ class CheckBox(_AComponent):
     def __init__(self, parent, label=u'', tooltip=None, checked=False):
         """Creates a new CheckBox with the specified properties.
 
-        :param parent: The object that the checkbox belongs to.
-        :param label: The text shown on the checkbox.
-        :param tooltip: A tooltip to show when the user hovers over the
+        :param parent: The object that this checkbox belongs to. May be a wx
+                       object or a component.
+        :param label: The text shown on this checkbox.
+        :param tooltip: A tooltip to show when the user hovers over this
                         checkbox.
         :param checked: The initial state of the checkbox."""
         super(CheckBox, self).__init__()
         # Create native widget
-        self._native_widget = _wx.CheckBox(parent, _wx.ID_ANY,
+        self._native_widget = _wx.CheckBox(self._resolve(parent), _wx.ID_ANY,
                                            label=label, name=u'checkBox')
         if tooltip:
             self.tooltip = tooltip
