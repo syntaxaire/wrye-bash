@@ -29,10 +29,10 @@ __author__ = 'nycz, Infernio'
 
 import wx as _wx
 
-from . import _AWidget
-from .events import EventHandler, value_processor
+from . import _AComponent
+from .events import EventHandler
 
-class _AButton(_AWidget):
+class _AButton(_AComponent):
     """Abstract base class for all buttons."""
     # TODO(inf) Expand this, or toss it
 

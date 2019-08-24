@@ -30,11 +30,11 @@ __author__ = 'nycz, Infernio'
 
 import wx as _wx
 
-from . import _AWidget
+from . import _AComponent
 from .events import EventHandler, text_processor
 
 # Text Input ------------------------------------------------------------------
-class _ATextInput(_AWidget):
+class _ATextInput(_AComponent):
     """Abstract base class for all text input classes.
 
     Events:
@@ -198,7 +198,7 @@ class TextField(_ATextInput):
                                         no_border=no_border)
 
 # Labels ----------------------------------------------------------------------
-class _ALabel(_AWidget):
+class _ALabel(_AComponent):
     """Abstract base class for labels."""
     @property
     def label_text(self): # type: () -> unicode

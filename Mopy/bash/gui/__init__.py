@@ -23,7 +23,7 @@
 # =============================================================================
 
 """This module houses parts of the GUI code that form the basis for the the
-more specialized parts (e.g. _AWidget) as well as all parts that don't fit
+more specialized parts (e.g. _AComponent) as well as all parts that don't fit
 anywhere else."""
 
 __author__ = 'nycz, Infernio'
@@ -68,24 +68,24 @@ class Color(object):
         return Color(color.red, color.green, color.blue, color.alpha)
 
 # Base elements ---------------------------------------------------------------
-class _AWidget(object):
+class _AComponent(object):
     """Abstract base class for all GUI items. Holds a reference to the native
     wx widget that we abstract over."""
     def __init__(self):
-        """Creates a new _AWidget instance. This initializes _native_widget to
-        None, which will later receive a proper value inside the __init__
-        methods of _AWidget's subclasses."""
+        """Creates a new _AComponent instance. This initializes _native_widget
+        to None, which will later receive a proper value inside the __init__
+        methods of _AComponent's subclasses."""
         self._native_widget = None  # type: _wx.Window
 
     @property
-    def widget_name(self): # type: () -> unicode
+    def component_name(self): # type: () -> unicode
         """Returns the name of this widget.
 
         :return: This widget's name."""
         return self._native_widget.GetName()
 
-    @widget_name.setter
-    def widget_name(self, new_name): # type: (unicode) -> None
+    @component_name.setter
+    def component_name(self, new_name): # type: (unicode) -> None
         """Sets the name of this widget to the specified name.
 
         :param new_name: The string to change this widget's name to."""
@@ -178,7 +178,7 @@ class _AWidget(object):
         self._native_widget.Move(new_position)
 
 # Misc elements ---------------------------------------------------------------
-class CheckBox(_AWidget):
+class CheckBox(_AComponent):
     """Represents a simple two-state checkbox.
 
     Events:
