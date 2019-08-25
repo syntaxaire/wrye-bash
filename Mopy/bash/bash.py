@@ -63,11 +63,15 @@ def _import_wx():
     global _wx
     try:
         import wx as _wx
-    except ImportError:
+        # Hacky fix for loading older settings that pickled classes from
+        # moved/deleted wx modules
+        from wx import _core
+        sys.modules['wx._gdi'] = _core
+    except Exception as e:
         but_kwargs = {'text': _(u"QUIT"),
                       'fg': 'red'}  # foreground button color
-        msg = u'\n'.join([dump_environment(), u'',
-            _(u'Unable to locate wxpython installation. Exiting.')])
+        msg = u'\n'.join([dump_environment(), u'', u'Unable to load wx:',
+                          traceback.format_exc(e), u'Exiting.'])
         _tkinter_error_dial(msg, but_kwargs)
         sys.exit(1)
 
@@ -84,7 +88,7 @@ def assure_single_instance(instance):
         bolt.deprint(u'Only one instance of Wrye Bash can run. Exiting.')
         msg = _(u'Only one instance of Wrye Bash can run.')
         _app = _wx.App(False)
-        with _wx.MessageDialog(None, msg, _(u'Wrye Bash'), _wx.OK) as dialog:
+        with _wx.MessageDialog(None, msg, u'Wrye Bash', _wx.OK) as dialog:
             dialog.ShowModal()
         sys.exit(1)
 
@@ -139,27 +143,26 @@ def dump_environment():
     msg = u'\n'.join([
         u'Wrye Bash starting',
         u'Using Wrye Bash Version %s%s' % (bass.AppVersion,
-            (u' ' + _(u'(Standalone)')) if is_standalone else u''
-        ),
+            u' (Standalone)' if is_standalone else u''),
         u'OS info: %s' % platform.platform(),
         u'Python version: %d.%d.%d' % (
-            sys.version_info[0],sys.version_info[1],sys.version_info[2]
+            sys.version_info[0], sys.version_info[1], sys.version_info[2]
         ),
         u'wxPython version: %s' % _wx.version() if _wx is not None else \
             u'wxPython not found',
         # Standalone: stdout will actually be pointing to stderr, which has no
         # 'encoding' attribute
         u'input encoding: %s; output encoding: %s; locale: %s' % (
-            sys.stdin.encoding,getattr(sys.stdout,'encoding',None),
+            sys.stdin.encoding, getattr(sys.stdout, 'encoding', None),
             locale.getdefaultlocale()
         ),
         u'filesystem encoding: %s%s' % (fse,
             (u' - using %s' % bolt.Path.sys_fs_enc) if bolt is not None
                                                        and not fse else u''),
-        u'command line: %s' % (sys.argv, )
+        u'command line: %s' % sys.argv
     ])
     if bolt.scandir is not None:
-        msg = u'\n'.join( [msg, 'Using scandir ' + bolt.scandir.__version__])
+        msg += u'\nUsing scandir ' + bolt.scandir.__version__
     print msg
     return msg
 
@@ -178,7 +181,7 @@ def main(opts):
     :type opts: Namespace"""
     # First import bolt, needed for localization of error messages
     _import_bolt(opts)
-    # Then import wx so we can style our error messages nicely
+    # Then import wx so we can set locale
     _import_wx()
     try:
         _main(opts)
@@ -305,6 +308,14 @@ def _main(opts):
             app = basher.BashApp(False)
     else:
         app = basher.BashApp()
+
+    if bass.language:
+        lang_info = _wx.Locale.FindLanguageInfo(bass.language)
+        # Use setlocale with lang_info.GetLocaleName()?
+        target_locale = _wx.Locale(lang_info.Language)
+    else:
+        target_locale = _wx.Locale(_wx.LANGUAGE_DEFAULT)
+    app.locale = target_locale
 
     if not is_standalone and (
         not _rightWxVersion() or not _rightPythonVersion()): return
@@ -537,12 +548,11 @@ def _wxSelectGame(ret, msgtext):
 # Version checks --------------------------------------------------------------
 def _rightWxVersion():
     wxver = _wx.version()
-    wxver_tuple = _wx.VERSION
-    if wxver != '2.8.12.1 (msw-unicode)' and wxver_tuple < (2,9):
+    if wxver != '3.0.2.0 msw (classic)':
         return balt.askYes(
             None, 'Warning: you appear to be using a non-supported version '
             'of wxPython (%s).  This will cause problems!  It is highly '
-            'recommended you use either version 2.8.12.1 (msw-unicode) or, '
+            'recommended you use either version 3.0.2.0 msw (classic) or, '
             'at your discretion, a later version (untested). Do you still '
             'want to run Wrye Bash?' % wxver,
             'Warning: Non-Supported wxPython detected', )
