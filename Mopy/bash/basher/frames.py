@@ -146,7 +146,8 @@ class DocBrowser(BaltFrame):
             self._mod_list.Delete(index)
         del self._db_doc_paths[self._mod_name]
         self.DoSave()
-        for btn in (self._forget_btn, self._rename_btn):
+        for btn in (self._edit_btn, self._forget_btn, self._rename_btn,
+                    self._open_btn):
             btn.Disable()
         self._doc_name_box.Clear()
         self._load_data(data=u'')
