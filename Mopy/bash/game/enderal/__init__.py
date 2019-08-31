@@ -37,6 +37,9 @@ class EnderalGameInfo(SkyrimGameInfo):
     defaultIniFile = u'enderal_default.ini'
     # Set to this because TESV.exe also exists for Enderal
     game_detect_file = [u'Enderal Launcher.exe']
+    # This isn't exact (currently 1.5.0 when it should be 1.5.7), but it's the
+    # closest we're going to get
+    version_detect_file = [u'Enderal Launcher.exe']
     iniFiles = [u'Enderal.ini', u'EnderalPrefs.ini']
     masterlist_dir = u'Enderal'
     regInstallKeys = (

@@ -33,8 +33,9 @@ class SkyrimVRGameInfo(SkyrimSEGameInfo):
     displayName = u'Skyrim VR'
     fsName = u'Skyrim VR'
     altName = u'Wrye VRash'
-    game_detect_file = [u'SkyrimVR.exe']
     launch_exe = u'SkyrimVR.exe'
+    game_detect_file = [u'SkyrimVR.exe']
+    version_detect_file = [u'SkyrimVR.exe']
     regInstallKeys = (
         u'Bethesda Softworks\\Skyrim VR',
         u'Installed Path'

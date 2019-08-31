@@ -63,7 +63,8 @@ class InstallerFomod(wiz.Wizard):
 
         fomod_file = installer.fomod_file().s
         data_path = bass.dirs["mods"]
-        ver = env.get_file_version(bass.dirs["app"].join(bush.game.launch_exe).s)
+        ver = env.get_file_version(bass.dirs["app"].join(
+            *bush.game.version_detect_file).s)
         game_ver = u".".join([unicode(i) for i in ver])
 
         self.parser = FomodInstaller(fomod_file, self.files_list, data_path, game_ver)
