@@ -572,9 +572,11 @@
         Delete "${Path}\scripts\WBReleaseBuild.bat"
         Delete "${Path}\Wrye Bash.nsi"
         ; As of 307, the following are obsolete:
+        Delete "${Path}\Mopy\bash\images\check.png"
         Delete "${Path}\Mopy\bash\images\readme\pm-archive-1.png"
         Delete "${Path}\Mopy\bash\images\readme\pm-archive-2.png"
         Delete "${Path}\Mopy\bash\images\readme\wryebash_08.png"
+        Delete "${Path}\Mopy\bash\images\x.png"
         Delete "${Path}\Mopy\bash\basher\pm_tab.p*"
         Delete "${Path}\Mopy\bash\bosh.p*"
         Delete "${Path}\Mopy\bash\bosh\msgs.p*"
