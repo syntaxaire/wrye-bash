@@ -28,7 +28,7 @@ from collections import defaultdict
 import wx
 import wx.wizard as wiz
 
-from .. import balt, bass, bolt, bosh, bush, env
+from .. import archives, balt, bass, bolt, bosh, bush, env
 from ..fomod import FailedCondition, FomodInstaller
 
 
@@ -373,6 +373,8 @@ class PageSelect(PageInstaller):
 
         self.bmp_item.Freeze()
         img = self.parent.archive_path.join(option.image)
+        if img.ext == u'.png':
+            archives.fix_png(img)
         try:
             image = self._img_cache[img]
         except KeyError:
