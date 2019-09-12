@@ -379,7 +379,7 @@ def initTranslator(lang=None, path=None):
 
 #--Do translator test and set
 if locale.getlocale() == (None,None):
-    locale.setlocale(locale.LC_ALL,u'')
+    locale.setlocale(locale.LC_ALL, u'')
 initTranslator(bass.language)
 
 CBash = 0

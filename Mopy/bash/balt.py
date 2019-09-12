@@ -367,7 +367,11 @@ class TextCtrl(wx.TextCtrl):
             self.Bind(wx.EVT_SIZE, self.OnSizeChange)
         # event handlers must call event.Skip()
         if onKillFocus:
-            self.Bind(wx.EVT_KILL_FOCUS, lambda __event: onKillFocus())
+            # Wrapper to hide event, but still call Skip()
+            def handle_focus_lost(event):
+                onKillFocus()
+                event.Skip()
+            self.Bind(wx.EVT_KILL_FOCUS, handle_focus_lost)
         if onText: self.Bind(wx.EVT_TEXT, onText)
 
     def UpdateToolTip(self, text):
@@ -1512,9 +1516,18 @@ class Progress(bolt.Progress):
 
     def getParent(self): return self.dialog.GetParent()
 
-    def setCancel(self, enabled=True):
-        cancel = self.dialog.FindWindowById(wx.ID_CANCEL)
-        cancel.Enable(enabled)
+    def setCancel(self, enabled=True, new_message=u''):
+        # TODO(inf) Hacky, we need to rewrite this class for wx3
+        new_title = self.dialog.GetTitle()
+        new_parent = self.dialog.GetParent()
+        new_style = self.dialog.GetWindowStyle()
+        if enabled:
+            new_style |= wx.PD_CAN_ABORT
+        else:
+            new_style &= ~wx.PD_CAN_ABORT
+        self.dialog.Destroy()
+        self.dialog = wx.ProgressDialog(new_title, new_message, 100,
+                                        new_parent, new_style)
 
     def _do_progress(self, state, message):
         if not self.dialog:
@@ -1522,7 +1535,8 @@ class Progress(bolt.Progress):
         elif (state == 0 or state == 1 or (message != self.prevMessage) or
             (state - self.prevState) > 0.05 or (time.time() - self.prevTime) > 0.5):
             if message != self.prevMessage:
-                ret = self.dialog.Update(int(state*100),message)
+                ret = self.dialog.Update(int(state * 100), u'\n'.join(
+                    [self._ellipsize(msg) for msg in message.split(u'\n')]))
             else:
                 ret = self.dialog.Update(int(state*100))
             if not ret[0]:
@@ -1530,6 +1544,23 @@ class Progress(bolt.Progress):
             self.prevMessage = message
             self.prevState = state
             self.prevTime = time.time()
+
+    @staticmethod
+    def _ellipsize(message):
+        """A really ugly way to ellipsize messages that would cause the
+        progress dialog to resize itself when displaying them. wx2.8's
+        ProgressDialog had this built in, but wx3.0's is native, and doesn't
+        have this feature, so we emulate it here. 50 characters was chosen as
+        the cutoff point, since that produced a reasonably good-looking
+        progress dialog at 1080p during testing.
+
+        :param message: The message to ellipsize.
+        :return: The ellipsized message."""
+        if len(message) > 50:
+            first = message[:24]
+            second = message[-26:]
+            return first + u'...' + second
+        return message
 
     def Destroy(self):
         if self.dialog:
@@ -3296,8 +3327,6 @@ class BaltFrame(wx.Frame):
     def OnCloseWindow(self):
         """Handle window close event.
         Remember window size, position, etc."""
-        # TODO(ut): maybe set Link.Frame.modChecker = None (compare with
-        # DocBrowser)
         _key = self.__class__._frame_settings_key
         if _key and not self.IsIconized() and not self.IsMaximized():
             _settings[_key + '.pos'] = tuple(self.GetPosition())
