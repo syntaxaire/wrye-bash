@@ -501,7 +501,7 @@ class MasterList(_ModsUIList):
             super(MasterList, self).OnBeginEditLabel(event)
 
     def OnLabelEdited(self,event):
-        itemDex = event.m_itemIndex
+        itemDex = event.GetIndex()
         newName = GPath(event.GetText())
         #--No change?
         if newName in bosh.modInfos:
@@ -1719,6 +1719,7 @@ class INIDetailsPanel(_DetailsMixin, SashPanel):
     def ClosePanel(self, destroy=False):
         super(INIDetailsPanel, self).ClosePanel(destroy)
         settings['bash.ini.lastDir'] = self.lastDir
+        # TODO(inf) de-wx!, needed for wx3, check if needed in Phoenix
         if destroy: self.comboBox.Unbind(wx.EVT_SIZE)
 
 class INIPanel(BashTab):
@@ -2854,6 +2855,10 @@ class InstallersPanel(BashTab):
         self._data_dir_scanned = False
         self.refreshing = False
         self.frameActivated = False
+        # if user cancels the refresh in wx 3 because progress is an OS
+        # window Bash effectively regains focus and keeps trying to refresh
+        # FIXME(ut) hack we must rewrite Progress for wx 3
+        self._user_cancelled = False
 
     @balt.conversation
     def _first_run_set_enabled(self):
@@ -2873,7 +2878,9 @@ class InstallersPanel(BashTab):
                   **kwargs):
         """Panel is shown. Update self.data."""
         self._first_run_set_enabled() # must run _before_ if below
-        if not settings['bash.installers.enabled'] or self.refreshing: return
+        if not settings['bash.installers.enabled'] or self.refreshing or self._user_cancelled:
+            self._user_cancelled = False
+            return
         try:
             self.refreshing = True
             self._refresh_installers_if_needed(canCancel, fullRefresh,
@@ -2910,7 +2917,7 @@ class InstallersPanel(BashTab):
                                                         refresh_info)
                     self.frameActivated = False
                 except CancelError:
-                    pass # User canceled the refresh
+                    self._user_cancelled = True # User canceled the refresh
                 finally:
                     self._data_dir_scanned = True
         elif self.frameActivated and self.listData.refreshConvertersNeeded():
@@ -4113,6 +4120,8 @@ def InitSettings(): # this must run first !
     settings.loadDefaults(settingDefaults)
     bosh.bain.Installer.init_global_skips() # must be after loadDefaults - grr #178
     bosh.bain.Installer.init_attributes_process()
+    # Plugin encoding used to decode mod string fields
+    bolt.pluginEncoding = bass.settings['bash.pluginEncoding']
     #--Wrye Balt
     settings['balt.WryeLog.temp'] = bass.dirs['saveBase'].join(u'WryeLogTemp.html')
     settings['balt.WryeLog.cssDir'] = bass.dirs['mopy'].join(u'Docs')
