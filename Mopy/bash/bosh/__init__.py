@@ -64,7 +64,8 @@ oldTags = sorted((u'Merge',))
 oldTagsSet = set(oldTags)
 reOblivion = re.compile(
     u'^(Oblivion|Nehrim)(|_SI|_1.1|_1.1b|_1.5.0.8|_GOTY non-SI).esm$', re.U)
-bak_file_pattern = re.compile(ur'(quick|auto)(save)(\.bak)+', re.I | re.U)
+bak_file_pattern = re.compile(r'(quick|auto)(save)(\.bak)+' + u'(f?)$',
+                              re.I | re.U)
 
 undefinedPath = GPath(u'C:\\not\\a\\valid\\path.exe')
 empty_path = GPath(u'') # evaluates to False in boolean expressions

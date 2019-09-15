@@ -1323,7 +1323,8 @@ class ACosave(_Dumpable, _Remappable, AFile):
         ma_bak = bak_file_pattern.search(save_path.s)
         if ma_bak:
             return save_path.head.join(ma_bak.group(1) + ma_bak.group(
-                2) + cls.cosave_ext + ma_bak.group(3))
+                2) + cls.cosave_ext + ma_bak.group(3) + ( ##: maybe just ma_bak.group(4)
+                                               ma_bak.group(4) or u''))
         raise BoltError(u'Invalid save path %s' % save_path)
 
 class xSECosave(ACosave):

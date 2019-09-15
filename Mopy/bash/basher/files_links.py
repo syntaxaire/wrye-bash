@@ -135,8 +135,7 @@ class File_Duplicate(ItemLink):
             #--Mod with resources? Warn on rename if file has bsa and/or dialog
             if not self._askResourcesOk(fileInfo): continue
             #--Continue copy
-            if bosh.bak_file_pattern.match(to_duplicate.s):
-                continue #YAK!
+            # FIXME use new_name below
             (destDir, wildcard) = (fileInfo.dir, u'*' + to_duplicate.ext)
             destName = self.window.new_path(
                 GPath(to_duplicate.root + u' Copy' + to_duplicate.ext), destDir)

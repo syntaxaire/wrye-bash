@@ -1837,15 +1837,23 @@ class SaveList(balt.UIList):
     ])
 
     __ext_group = u'(\.(' + bush.game.ess.ext[1:] + u'|' + \
-                  bush.game.ess.ext[1:-1] + u'r' + u'))' # add bak !!!
+                  bush.game.ess.ext[1:-1] + u'r' + u'))' # TODO add bak !!!
     def validate_filename(self, event, name_new=None, has_digits=False,
                           ext=u'', is_filename=True, _old_path=None):
-        if _old_path and bosh.bak_file_pattern.match(_old_path.s): ##: YAK add cosave support for bak
-            balt.showError(self, _(u'Renaming bak files is not supported.'))
-            return None, None, None
         return super(SaveList, self).validate_filename(event, name_new,
             has_digits=has_digits, ext=self.__ext_group,
             is_filename=is_filename)
+
+    @staticmethod
+    def _new_name(new_name, count):
+        ma_bak = bosh.bak_file_pattern.search(new_name.s)
+        if ma_bak:
+            root_, ext_ = ma_bak.group(1) + ma_bak.group(2), ma_bak.group(3)
+        else:
+            root_, ext_ = new_name.root, new_name.ext
+        count += 1
+        new_name = GPath(root_ + (u' (%d)' % count) + ext_)
+        return new_name, count
 
     def OnLabelEdited(self, event):
         """Savegame renamed."""
