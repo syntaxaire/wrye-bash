@@ -393,6 +393,11 @@ class GameInfo(object):
     #--------------------------------------------------------------------------
     default_eyes = {}
 
+    #--------------------------------------------------------------------------
+    # Keywords Patcher
+    #--------------------------------------------------------------------------
+    keywords_types = ()
+
     # Record type to name dictionary
     record_type_name = {}
 
@@ -426,9 +431,10 @@ class GameInfo(object):
         'conditionFunctionData', 'default_eyes', 'fid1Conditions',
         'fid2Conditions', 'fid5Conditions', 'gmstEids', 'graphicsFidTypes',
         'graphicsLongsTypes', 'graphicsModelAttrs', 'graphicsTypes',
-        'inventoryTypes', 'listTypes', 'namesTypes', 'pricesTypes',
-        'record_type_name', 'save_rec_types', 'soundsLongsTypes',
-        'soundsTypes', 'statsHeaders', 'statsTypes', 'xEdit_expert',
+        'inventoryTypes', 'keywords_types', 'listTypes', 'namesTypes',
+        'pricesTypes', 'record_type_name', 'save_rec_types',
+        'soundsLongsTypes', 'soundsTypes', 'statsHeaders', 'statsTypes',
+        'xEdit_expert',
     }
     @classmethod
     def _dynamic_import_modules(cls, package_name):
