@@ -60,7 +60,7 @@ class SkyrimVRGameInfo(SkyrimSEGameInfo):
     patchers = (
         u'CellImporter', u'GmstTweaker', u'GraphicsPatcher',
         u'ImportInventory', u'ListsMerger', u'PatchMerger', u'SoundPatcher',
-        u'StatsPatcher', u'NamesPatcher',
+        u'StatsPatcher', u'NamesPatcher', u'KeywordsImporter',
     )
 
     class se(SkyrimSEGameInfo.se):
