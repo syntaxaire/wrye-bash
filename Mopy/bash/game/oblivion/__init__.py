@@ -66,6 +66,7 @@ class OblivionGameInfo(GameInfo):
         exe = u'obse_loader.exe'
         steam_exe = u'obse_1_2_416.dll'
         plugin_dir = u'OBSE'
+        cosave_tag = u'OBSE'
         cosave_ext = u'.obse'
         url = u'http://obse.silverlock.org/'
         url_tip = u'http://obse.silverlock.org/'
