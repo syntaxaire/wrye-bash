@@ -2712,9 +2712,9 @@ class SaveInfos(FileInfos):
         for row in self.profiles.keys():
             if row.endswith(u'\\'):
                 self.profiles.moveRow(row, row[:-1])
-        co_types = cosaves.get_cosave_types(bush.game.fsName,
-                                            bush.game.ess.ext)
-        SaveInfo.cosave_types = co_types
+        SaveInfo.cosave_types = cosaves.get_cosave_types(
+            bush.game.fsName, bush.game.ess.ext, bush.game.se.cosave_tag,
+            bush.game.se.cosave_ext)
 
     @property
     def bash_dir(self): return self.store_dir.join(u'Bash')
