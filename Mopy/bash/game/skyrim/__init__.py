@@ -69,6 +69,7 @@ class SkyrimGameInfo(GameInfo):
         exe = u'skse_loader.exe'
         steam_exe = u'skse_loader.exe'
         plugin_dir = u'SKSE'
+        cosave_tag = u'SKSE'
         cosave_ext = u'.skse'
         url = u'http://skse.silverlock.org/'
         url_tip = u'http://skse.silverlock.org/'
