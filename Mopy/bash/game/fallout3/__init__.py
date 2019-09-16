@@ -61,6 +61,7 @@ class Fallout3GameInfo(GameInfo):
         exe = u'fose_loader.exe'
         steam_exe = u'fose_loader.dll'
         plugin_dir = u'FOSE'
+        cosave_tag = u'FOSE'
         cosave_ext = u'.fose'
         url = u'http://fose.silverlock.org/'
         url_tip = u'http://fose.silverlock.org/'

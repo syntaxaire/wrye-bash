@@ -64,13 +64,11 @@ class _Remappable(object):
     __slots__ = ()
 
     def remap_plugins(self, plugin_renames):
-        """
-        Remaps the names of relevant plugin entries in this object.
+        """Remaps the names of relevant plugin entries in this object.
 
         :param plugin_renames: A dictionary containing the renames: key is the
             name of the plugin before the renaming, value is the name
-            afterwards.
-        """
+            afterwards."""
         raise AbstractError()
 
 class _Dumpable(object):
@@ -78,13 +76,11 @@ class _Dumpable(object):
     __slots__ = ()
 
     def dump_to_log(self, log, save_masters):
-        """
-        Dumps information from this object into the specified log.
+        """Dumps information from this object into the specified log.
 
         :param log: A bolt.Log instance to write to.
         :param save_masters: A list of the masters of the save file that this
-            object's cosave belongs to.
-        """
+            object's cosave belongs to."""
         raise AbstractError()
 
 class _ChunkEntry(object):
@@ -96,23 +92,19 @@ class _ChunkEntry(object):
     __slots__ = ()
 
     def write_entry(self, out):
-        """
-        Writes this entry to the specified output stream. This has to be
+        """Writes this entry to the specified output stream. This has to be
         implemented.
 
-        :param out: The output stream to write to.
-        """
+        :param out: The output stream to write to."""
         raise AbstractError()
 
     def entry_length(self):
-        """
-        Calculates the length of this entry, i.e. the length of the data that
-        this entry abstracts over. Pluggy entries do not implement this, since
-        Pluggy cosaves don't include any size or length fields for which this
-        would be meaningful.
+        """Calculates the length of this entry, i.e. the length of the data
+        that this entry abstracts over. Pluggy entries do not implement this,
+        since Pluggy cosaves don't include any size or length fields for which
+        this would be meaningful.
 
-        :return: The calculated length (in bytes).
-        """
+        :return: The calculated length (in bytes)."""
         raise AbstractError()
 
 #------------------------------------------------------------------------------
@@ -123,13 +115,11 @@ class _AHeader(_Dumpable):
     __slots__ = ()
 
     def __init__(self, ins, cosave_path):
-        """
-        The base constructor for headers checks if the expected save file tag
-        for this header matches the actual tag found in the file.
+        """The base constructor for headers checks if the expected save file
+        tag for this header matches the actual tag found in the file.
 
         :param ins: The input stream to read from.
-        :param cosave_path: The path to the cosave.
-        """
+        :param cosave_path: The path to the cosave."""
         actual_tag = _cosave_decode(unpack_string(ins, len(self.savefile_tag)))
         if actual_tag != self.savefile_tag:
             raise FileError(cosave_path.tail, u'Header tag wrong: got %s, but '
@@ -137,12 +127,10 @@ class _AHeader(_Dumpable):
                             (actual_tag, self.savefile_tag))
 
     def write_header(self, out):
-        """
-        Writes this header to the specified output stream. The base method just
-        writes the save file tag.
+        """Writes this header to the specified output stream. The base method
+        just writes the save file tag.
 
-        :param out: The output stream to write to.
-        """
+        :param out: The output stream to write to."""
         out.write(_cosave_encode(self.savefile_tag))
 
     def dump_to_log(self, log, save_masters):
@@ -152,7 +140,7 @@ class _AHeader(_Dumpable):
 class _xSEHeader(_AHeader):
     """Header for xSE cosaves."""
     __slots__ = ('format_version', 'se_version', 'se_minor_version',
-                 'game_version', 'num_plugin_chunks')
+                 'game_version', 'num_plugin_chunks',)
 
     # num_plugin_chunks is the number of xSE plugin chunks contained in the
     # cosave. Note that xSE itself also counts as one!
@@ -217,11 +205,9 @@ class _AChunk(object):
     __slots__ = ()
 
     def write_chunk(self, out):
-        """
-        Writes this chunk to the specified output stream.
+        """Writes this chunk to the specified output stream.
 
-        :param out: The output stream to write to.
-        """
+        :param out: The output stream to write to."""
 
 #------------------------------------------------------------------------------
 # xSE Chunks
@@ -232,14 +218,14 @@ class _xSEChunk(_AChunk):
     # Whether or not we've fully decoded this chunk. If that is the case, the
     # fallback functionality is disabled.
     _fully_decoded = False
-    __slots__ = ('chunk_type', 'chunk_version', 'chunk_data')
+    __slots__ = ('chunk_type', 'chunk_version', 'chunk_data',)
 
     def __init__(self, ins, chunk_type):
         self.chunk_type = chunk_type
         self.chunk_version = unpack_int(ins)
         data_len = unpack_int(ins)
-        if not self._fully_decoded: # if we haven't fully decoded this chunk,
-                                    # treat it as a binary blob
+        # If we haven't fully decoded this chunk, treat it as a binary blob
+        if not self._fully_decoded:
             self.chunk_data = ins.read(data_len)
 
     def write_chunk(self, out):
@@ -247,19 +233,21 @@ class _xSEChunk(_AChunk):
         _pack(out, '=4s', _cosave_encode(self.chunk_type[::-1]))
         _pack(out, '=I', self.chunk_version)
         _pack(out, '=I', self.chunk_length())
+        # If we haven't fully decoded this chunk, treat it as a binary blob
         if not self._fully_decoded:
             out.write(self.chunk_data)
 
     # TODO(inf) This is a prime target for refactoring in 308+
     # A lot of it could be auto-calculated
     def chunk_length(self):
-        """
-        Calculates the length of this chunk, i.e. the length of the data that
-        follows after this chunk's header.
+        """Calculates the length of this chunk, i.e. the length of the data
+        that follows after this chunk's header. Fully decoded chunks must
+        override this, otherwise an AbstractError will be raised.
 
-        :return: The calculated length (in bytes).
-        """
-        # No need to check _fully_decoded, subclasses *must* override this
+        :return: The calculated length (in bytes)."""
+        # Let's be defensive here - will minimally slow us down to check this,
+        # but enforcing your API is good practice
+        if self._fully_decoded: raise AbstractError()
         return len(self.chunk_data)
 
 class _xSEModListChunk(_xSEChunk, _Dumpable, _Remappable):
@@ -309,11 +297,11 @@ class _xSEChunkARVR(_xSEChunk, _Dumpable):
     ArrayVar.h in xSE's source code for the specification."""
     _fully_decoded = True
     __slots__ = ('_key_type', 'mod_index', 'array_id', 'is_packed',
-                 'references', 'elements')
+                 'references', 'elements',)
 
     class _xSEEntryARVR(_ChunkEntry, _Dumpable):
         """A single ARVR entry. An ARVR chunk contains several of these."""
-        __slots__ = ('_key_type', 'key', 'element_type', 'stored_data')
+        __slots__ = ('_key_type', 'key', 'element_type', 'stored_data',)
 
         def __init__(self, ins, key_type):
             if key_type == 1:
@@ -561,7 +549,7 @@ class _xSEChunkPLGN(_xSEChunk, _Dumpable, _Remappable):
 
     class _xSEEntryPLGN(_ChunkEntry, _Dumpable, _Remappable):
         """A single PLGN entry. A PLGN chunk contains several of these."""
-        __slots__ = ('mod_index', 'light_index', 'mod_name')
+        __slots__ = ('mod_index', 'light_index', 'mod_name',)
 
         def __init__(self, ins):
             self.mod_index = unpack_byte(ins)
@@ -622,7 +610,7 @@ class _xSEChunkSTVR(_xSEChunk, _Dumpable):
     """An STVR (String Variable) chunk. Only available in OBSE and NVSE. See
     StringVar.h in xSE's source code for the specification."""
     _fully_decoded = True
-    __slots__ = ('mod_index', 'string_id', 'string_data')
+    __slots__ = ('mod_index', 'string_id', 'string_data',)
 
     def __init__(self, ins, chunk_type):
         super(_xSEChunkSTVR, self).__init__(ins, chunk_type)
@@ -645,6 +633,7 @@ class _xSEChunkSTVR(_xSEChunk, _Dumpable):
         log(_(u'   ID  : %u') % self.string_id)
         log(_(u'   Data: %s') % self.string_data)
 
+# Maps all decoded xSE chunk types to the classes that implement them
 _xse_class_dict = {
     u'ARVR': _xSEChunkARVR,
     u'LIMD': _xSEChunkLIMD,
@@ -655,15 +644,14 @@ _xse_class_dict = {
 }
 
 def _get_xse_chunk(ins):
-    """
-    Read a 4-byte string from the specified input stream and return an instance
-    of a matching xSE chunk class for that string. If no matching class is
-    found, an instance of the generic _xSEChunk class is returned instead.
+    """Read a 4-byte string from the specified input stream and return an
+    instance of a matching xSE chunk class for that string. If no matching
+    class is found, an instance of the generic _xSEChunk class is returned
+    instead.
 
     :param ins: The input stream to read from.
     :return: A instance of a matching chunk class, or the generic one if no
-        matching class was found.
-    """
+        matching class was found."""
     # The chunk type strings are reversed in the cosaves
     ch_type = _cosave_decode(unpack_4s(ins))[::-1]
     ch_class = _xse_class_dict.get(ch_type, _xSEChunk)
@@ -671,7 +659,7 @@ def _get_xse_chunk(ins):
 
 class _xSEPluginChunk(_AChunk, _Remappable):
     """A single xSE chunk, composed of _xSEChunk objects."""
-    __slots__ = ('plugin_signature', 'chunks', 'remappable_chunks')
+    __slots__ = ('plugin_signature', 'chunks', 'remappable_chunks',)
 
     def __init__(self, ins, light=False):
         self.plugin_signature = unpack_int(ins) # aka opcodeBase on pre papyrus
@@ -686,12 +674,11 @@ class _xSEPluginChunk(_AChunk, _Remappable):
                 self._read_chunk(ins)
 
     def _read_chunk(self, ins):
-        """
-        Reads a single chunk from the specified input stream and appends it to
-        self.chunks and, if the chunk is remappable, to self.remappable_chunks.
+        """Reads a single chunk from the specified input stream and appends it
+        to self.chunks and, if the chunk is remappable, to
+        self.remappable_chunks.
 
-        :param ins: The input stream to read from.
-        """
+        :param ins: The input stream to read from."""
         new_chunk = _get_xse_chunk(ins)
         self.chunks.append(new_chunk)
         if isinstance(new_chunk, _Remappable):
@@ -731,13 +718,11 @@ class _PluggyBlock(_AChunk, _Dumpable):
         _pack(out, '=B', self.record_type)
 
     def unique_identifier(self):
-        """
-        Retrieves a unique identifier for this block. In most cases, this
+        """Retrieves a unique identifier for this block. In most cases, this
         should simply be a human-understandable name for the block. An
         exception are the array blocks, since they may occur multiple times.
 
-        :return: A human-understandable, unique identifier for this block.
-        """
+        :return: A human-understandable, unique identifier for this block."""
         raise AbstractError()
 
 class _PluggyPluginBlock(_PluggyBlock, _Remappable):
@@ -748,7 +733,7 @@ class _PluggyPluginBlock(_PluggyBlock, _Remappable):
 
     class _PluggyEntryPlugin(_ChunkEntry, _Dumpable, _Remappable):
         """A single Plugin entry. A Plugin block contains several of these."""
-        __slots__ = ('pluggy_id', 'game_id', 'plugin_name')
+        __slots__ = ('pluggy_id', 'game_id', 'plugin_name',)
 
         def __init__(self, ins):
             self.pluggy_id = unpack_byte(ins)
@@ -804,7 +789,7 @@ class _PluggyStringBlock(_PluggyBlock):
     class _PluggyEntryString(_ChunkEntry, _Dumpable):
         """A single String entry. A String block contains several of these."""
         __slots__ = ('string_id', 'plugin_index', 'string_flags',
-                     'string_data')
+                     'string_data',)
 
         def __init__(self, ins):
             self.string_id = unpack_int(ins)
@@ -851,10 +836,11 @@ class _PluggyArrayBlock(_PluggyBlock):
     more of these (one for each saved array) follow directly after the string
     block."""
     __slots__ = ('array_id', 'plugin_index', 'array_flags', 'max_size',
-                 'array_entries')
+                 'array_entries',)
 
     class _PluggyEntryArray(_ChunkEntry, _Dumpable):
-        __slots__ = ('entry_index', 'entry_type', 'entry_data')
+        """A single Array entry. An Array block contains several of these."""
+        __slots__ = ('entry_index', 'entry_type', 'entry_data',)
 
         def __init__(self, ins):
             self.entry_index = unpack_int(ins)
@@ -935,7 +921,7 @@ class _PluggyNameBlock(_PluggyBlock):
 
     class _PluggyEntryName(_ChunkEntry, _Dumpable):
         """A single Name entry. A Name block contains several of these."""
-        __slots__ = ('reference_id', 'name_data')
+        __slots__ = ('reference_id', 'name_data',)
 
         def __init__(self, ins):
             self.reference_id = unpack_int(ins)
@@ -979,7 +965,7 @@ class _PluggyScreenInfoBlock(_PluggyBlock):
     """A screen information record block. This is an optional block and, if
     present, follows directly after the name block. Note that this block will
     only ever be present if there is at least one HudS or HudT block."""
-    __slots__ = ('screen_width', 'screen_height')
+    __slots__ = ('screen_width', 'screen_height',)
 
     def __init__(self, ins, record_type):
         super(_PluggyScreenInfoBlock, self).__init__(record_type)
@@ -1202,7 +1188,7 @@ class ACosave(_Dumpable, _Remappable, AFile):
     cosave_ext = u''
     re_save = re.compile(u'') # parse savename to extract root component
     __slots__ = ('cosave_header', 'cosave_chunks', 'remappable_chunks',
-                 'loading_state')
+                 'loading_state',)
     # loading_state is one of (0, 1, 2), where:
     #  0 means not loaded
     #  1 means the first cosave chunk (and the first chunk of that one, if
@@ -1216,16 +1202,14 @@ class ACosave(_Dumpable, _Remappable, AFile):
         self.loading_state = 0 # cosaves are lazily initialized
 
     def read_cosave(self, light=False):
-        """
-        Reads the entire cosave, including header and body. If you have to
+        """Reads the entire cosave, including header and body. If you have to
         control the entire loading procedure, you may have to override this.
         For example, the Pluggy save format is laid out in a way that requires
         skipping to the end to skip 12 bytes - otherwise, reading it is
         impossible.
 
         :param light: Whether or not to only load the first chunk of the file
-        (and, if applicable, only the first chunk of that chunk).
-        """
+            (and, if applicable, only the first chunk of that chunk)."""
         target_state = 1 if light else 2
         if self.loading_state < target_state:
             # Need to reset these to avoid adding duplicates
@@ -1243,86 +1227,73 @@ class ACosave(_Dumpable, _Remappable, AFile):
         super(ACosave, self)._reset_cache(stat_tuple, load_cache)
 
     def _read_cosave_header(self, ins):
-        """
-        Reads and assigns the header of this cosave. You probably don't need to
-        override this method.
+        """Reads and assigns the header of this cosave. You probably don't need
+        to override this method.
 
-        :param ins: The input stream to read from.
-        """
+        :param ins: The input stream to read from."""
         self.cosave_header = self.header_type(ins, self.abs_path)
 
     def _read_cosave_body(self, ins, light=False):
-        """
-        Reads the body of this cosave. The header is already read and assigned
-        at this point, meaning that only the chunks have to be loaded. For xSE
-        cosaves, these are the 'plugin chunks'. For pluggy cosaves, these are
-        the 'record blocks'.
+        """Reads the body of this cosave. The header is already read and
+        assigned at this point, meaning that only the chunks have to be loaded.
+        Some examples: for xSE cosaves, these are the 'plugin chunks'. For
+        Pluggy cosaves, these are the 'record blocks'.
 
         The way to implement this method is to read and instantiate each chunk,
-        and to then call add_chunk() with the newly created chunk as the
-        argument. This will properly set up the remappable_chunks list as well,
-        allowing efficient remapping at runtime.
+        and to then call _add_cosave_chunk() with the newly created chunk. This
+        will properly set up the remappable_chunks list as well, allowing
+        efficient remapping at runtime.
 
         :param ins: The input stream to read from.
         :param light: Whether or not to only load the first chunk of the file
-            (and, if applicable, only the first cunk of that chunk).
-        """
+            (and, if applicable, only the first cunk of that chunk)."""
         raise AbstractError()
 
     def _add_cosave_chunk(self, cosave_chunk):
-        """
-        Adds a new chunk to this cosave. Appends the specified chunk to the
+        """Adds a new chunk to this cosave. Appends the specified chunk to the
         cosave_chunks list and, if it is remappable, to the remappable_chunks
         list.
 
-        :param cosave_chunk: The chunk to add.
-        """
+        :param cosave_chunk: The chunk to add."""
         self.cosave_chunks.append(cosave_chunk)
         if isinstance(cosave_chunk, _Remappable):
             self.remappable_chunks.append(cosave_chunk)
 
     def write_cosave(self, out_path):
-        """
-        Writes this cosave to the specified path. Any changes that have been
+        """Writes this cosave to the specified path. Any changes that have been
         done to the cosave in-memory will be written out by this.
 
-        :param out_path: The path to write to.
-        """
+        :param out_path: The path to write to."""
         # We need the entire cosave to write
         self.read_cosave()
 
-    def write_cosave_safe(self, out_path=""):
-        """
-        Writes out any in-memory changes that have been made to this cosave to
-        the specified path, first moving it to a temporary location to avoid
+    def write_cosave_safe(self, out_path=u''):
+        """Writes out any in-memory changes that have been made to this cosave
+        to the specified path, first moving it to a temporary location to avoid
         overwriting the original file if something goes wrong.
 
         :param out_path: The path to write to. If empty or None, this cosave's
-            own path is used instead.
-        """
+            own path is used instead."""
         out_path = out_path or self.abs_path
         self.write_cosave(out_path.temp)
         out_path.untemp()
 
     def get_master_list(self):
-        """
-        Retrieves a list of masters from this cosave. This will read an
+        """Retrieves a list of masters from this cosave. This will read an
         appropriate chunk and return a list of the masters from that chunk.
 
-        :return: A list of the masters stored in this cosave.
-        """
+        :return: A list of the masters stored in this cosave."""
 
     def has_accurate_master_list(self, has_esl):
-        """
-        Checks whether or not this cosave contains an accurate master list -
+        """Checks whether or not this cosave contains an accurate master list -
         i.e. one that correctly represents the order of plugins as they were at
         the time that the save was taken. This is used to determine whether or
         not to use get_master_list for saves in SSE / FO4.
+
         :param has_esl: Whether or not the current game has ESL support. This
             should be set to the value of bush.game.has_esl.
         :return: True if the master list retrieved by get_master_list will be
-            accurate.
-        """
+            accurate."""
 
     def dump_to_log(self, log, save_masters):
         # We need the entire cosave to dump
@@ -1339,7 +1310,12 @@ class ACosave(_Dumpable, _Remappable, AFile):
     def get_cosave_path(cls, save_path):
         """Return the cosave path corresponding to save_path. The save_path
         may be located in the backup directory and so it may end with an 'f'
-        (for first backup) which should be appended to the cosave path also."""
+        (for first backup) which should be appended to the cosave path also.
+
+        :param save_path: The path to the save file that a cosave could belong
+            to.
+        :return: The path at which the cosave could exist.
+        :rtype: bolt.Path"""
         maSave = cls.re_save.search(save_path.s)
         if maSave:
             first = maSave.group(1) or u''
@@ -1427,14 +1403,12 @@ class xSECosave(ACosave):
 
     # Helper methods
     def _get_plugin_signature(self, plugin_chunk):
-        """
-        Creates a human-readable version of the specified plugin chunk's
+        """Creates a human-readable version of the specified plugin chunk's
         signature.
 
         :param plugin_chunk: The plugin chunk whose signature should be
             processed.
-        :return: A human-readable version of the plugin chunk's signature.
-        """
+        :return: A human-readable version of the plugin chunk's signature."""
         raw_sig = plugin_chunk.plugin_signature
         if raw_sig == self._xse_signature:
             readable_sig = self.cosave_header.savefile_tag
@@ -1448,27 +1422,24 @@ class xSECosave(ACosave):
 
     @staticmethod
     def _to_unichr(target_int, shift):
-        """
-        Small helper method for _get_plugin_signature that interprets the
+        """Small helper method for _get_plugin_signature that interprets the
         result of shifting the specified integer by the specified shift amount
         and masking with 0xFF as a unichr. Additionally, if the result of that
         operation is not printable, an empty string is returned instead.
 
         :param target_int: The integer to shift and mask.
         :param shift: By how much (in bits) to shift.
-        :return: The unichr representation of the result, or an empty string.
-        """
+        :return: The unichr representation of the result, or an empty
+            string."""
         temp_char = unichr(target_int >> shift & 0xFF)
         if temp_char not in string.printable:
             temp_char = u''
         return temp_char
 
     def _get_xse_plugin(self):
-        """
-        Retrieves the plugin chunk for xSE itself from this cosave.
+        """Retrieves the plugin chunk for xSE itself from this cosave.
 
-        :return: The plugin chunk for xSE itself.
-        """
+        :return: The plugin chunk for xSE itself."""
         for plugin_chunk in self.cosave_chunks: # type: _xSEPluginChunk
             if plugin_chunk.plugin_signature == self._xse_signature:
                 return plugin_chunk
@@ -1544,18 +1515,15 @@ class PluggyCosave(ACosave):
             raw_type = ins.read(1)
 
     def _get_block_type(self, record_type):
-        """
-        Returns the matching block type for the specified record type or raises
-        an informative error if the record type is not known.
+        """Returns the matching block type for the specified record type or
+        raises an informative error if the record type is not known.
 
-        :param record_type: An integer representing the read record type.
-        """
-        if record_type < len(self._block_types):
+        :param record_type: An integer representing the read record type."""
+        try:
             return self._block_types[record_type]
-        else:
+        except IndexError:
             raise FileError(self.abs_path.tail, u'Unknown pluggy record block '
-                                                u'type %u.' %
-                            record_type)
+                                                u'type %u.' % record_type)
 
     def write_cosave(self, out_path):
         super(PluggyCosave, self).write_cosave(out_path)
@@ -1597,26 +1565,30 @@ class PluggyCosave(ACosave):
             pluggy_block.dump_to_log(log, save_masters)
 
 # Factory
-def get_cosave_types(game_fsName, game_ess_ext):
-    """:rtype: tuple[type]"""
+def get_cosave_types(game_fsName, save_ext, cosave_tag, cosave_ext):
+    """Factory method for retrieving the cosave types for the current game.
+    Also sets up some class variables for xSE and Pluggy signatures.
+
+    :param game_fsName: bush.game.fsName, the name of the current game.
+    :param save_ext: bush.game.ess.ext, the extension for save files.
+    :param cosave_tag: bush.game.se.cosave_tag, the magic tag used to mark the
+        cosave. Empty string if this game doesn't have cosaves.
+    :param cosave_ext: bush.game.se.cosave_ext, the extension for cosaves.
+    :return: A list of types of cosaves supported by this game.
+    :rtype: list[type[ACosave]]"""
+    # Check if the game even has a script extender
+    if not cosave_tag: return []
+    # Assign things that concern all games with script extenders
+    _xSEHeader.savefile_tag = cosave_tag
+    xSECosave.cosave_ext = cosave_ext
+    ACosave.re_save = re.compile(re.escape(save_ext) + '(f?)$',
+                                 re.I | re.U)
     cosave_types = [xSECosave]
+    # Handle game-specific special cases
     if game_fsName == u'Oblivion':
         xSECosave._pluggy_signature = 0x2330
-        _xSEHeader.savefile_tag = u'OBSE'
         cosave_types.append(PluggyCosave)
-    elif game_fsName in (u'Enderal', u'Skyrim', u'Skyrim Special Edition'):
+    elif game_fsName not in (u'Fallout3', u'FalloutNV'):
+        # Games >= Skyrim have 0 as the xSE signature
         xSECosave._xse_signature = 0x0
-        _xSEHeader.savefile_tag = u'SKSE'
-    elif game_fsName == u'Fallout4':
-        xSECosave._xse_signature = 0x0
-        _xSEHeader.savefile_tag = u'F4SE'
-    elif game_fsName == u'Fallout3':
-        _xSEHeader.savefile_tag = u'FOSE'
-    elif game_fsName == u'FalloutNV':
-        _xSEHeader.savefile_tag = u'NVSE'
-    else:
-        return ()
-    xSECosave.cosave_ext = u'.%s' % _xSEHeader.savefile_tag.lower()
-    ACosave.re_save = re.compile(re.escape(game_ess_ext) + '(f?)$',
-                                 re.I | re.U)
     return cosave_types
