@@ -1196,7 +1196,7 @@ class _PluggyHudTBlock(_PluggyBlock):
 
 #------------------------------------------------------------------------------
 # Files
-class _ACosave(_Dumpable, _Remappable, AFile):
+class ACosave(_Dumpable, _Remappable, AFile):
     """The abstract base class for all cosave files."""
     header_type = _AHeader
     cosave_ext = u''
@@ -1210,7 +1210,7 @@ class _ACosave(_Dumpable, _Remappable, AFile):
     #  2 means the full cosave has been loaded
 
     def __init__(self, cosave_path):
-        super(_ACosave, self).__init__(cosave_path, raise_on_error=True)
+        super(ACosave, self).__init__(cosave_path, raise_on_error=True)
         self.cosave_chunks = []
         self.remappable_chunks = []
         self.loading_state = 0 # cosaves are lazily initialized
@@ -1235,6 +1235,12 @@ class _ACosave(_Dumpable, _Remappable, AFile):
                 self._read_cosave_header(ins)
                 self._read_cosave_body(ins, light)
             self.loading_state = target_state
+
+    def _reset_cache(self, stat_tuple, load_cache):
+        # Reset our loading state to 'unloaded', which will discard everything
+        # when the next request is made to the cosave (see read_cosave above)
+        self.loading_state = 0
+        super(ACosave, self)._reset_cache(stat_tuple, load_cache)
 
     def _read_cosave_header(self, ins):
         """
@@ -1344,7 +1350,7 @@ class _ACosave(_Dumpable, _Remappable, AFile):
                 2) + cls.cosave_ext + ma_bak.group(3))
         raise BoltError(u'Invalid save path %s' % save_path)
 
-class xSECosave(_ACosave):
+class xSECosave(ACosave):
     """Represents an xSE cosave, with a .**se extension."""
     header_type = _xSEHeader
     _pluggy_signature = None # signature (aka opcodeBase) of Pluggy plugin
@@ -1470,7 +1476,7 @@ class xSECosave(_ACosave):
         raise FileError(self.abs_path.tail, u'Invalid cosave: xSE plugin '
                                             u'chunk is missing.')
 
-class PluggyCosave(_ACosave):
+class PluggyCosave(ACosave):
     """Represents a Pluggy cosave, with a .pluggy extension."""
     header_type = _PluggyHeader
     cosave_ext = u'.pluggy'
@@ -1612,6 +1618,6 @@ def get_cosave_types(game_fsName, game_ess_ext):
     else:
         return ()
     xSECosave.cosave_ext = u'.%s' % _xSEHeader.savefile_tag.lower()
-    _ACosave.re_save = re.compile(re.escape(game_ess_ext) + '(f?)$',
-                                  re.I | re.U)
+    ACosave.re_save = re.compile(re.escape(game_ess_ext) + '(f?)$',
+                                 re.I | re.U)
     return cosave_types

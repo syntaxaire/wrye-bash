@@ -999,10 +999,30 @@ class SaveInfo(FileInfo):
         self._reset_masters()
 
     def do_update(self):
-        # TODO use do_update on cached cosaves themselves after checking if
-        #  they exist instead of unconditionally resetting cache
-        self._co_saves = self.__empty # reset the cosaves cache on refresh
-        return super(SaveInfo, self).do_update()
+        # Check for new and deleted cosaves and do_update old, surviving ones
+        cosaves_changed = False
+        for co_type in SaveInfo.cosave_types:
+            co_path = co_type.get_cosave_path(self.abs_path)
+            if co_path.isfile():
+                if co_type in self._co_saves:
+                    # Existing cosave could have changed, check if it did
+                    cosaves_changed = self._co_saves[co_type].do_update() or \
+                                      cosaves_changed
+                else:
+                    # New cosave attached, add it to cache
+                    self._co_saves[co_type] = self.make_cosave(co_type,
+                                                               co_path)
+                    cosaves_changed = True
+            elif co_type in self._co_saves:
+                # Old cosave deleted, remove it from cache
+                del self._co_saves[co_type]
+                cosaves_changed = True
+        # If the cosaves have changed, the cached masters can no longer be
+        # trusted since they may have been retrieved from the cosaves
+        if cosaves_changed:
+            self._reset_masters()
+        # Delegate the call first, but also take the cosaves into account
+        return super(SaveInfo, self).do_update() or cosaves_changed
 
     def write_masters(self):
         """Rewrites masters of existing save file."""
@@ -1048,44 +1068,50 @@ class SaveInfo(FileInfo):
         """As bosh.SaveInfo#get_cosaves_for_path - also populate self._co_saves
         """
         if self._co_saves is self.__empty:
-            self._co_saves = self.get_cosaves_for_path(self.getPath())
+            self._co_saves = self.get_cosaves_for_path(self.abs_path)
         return self._co_saves
+
+    @staticmethod
+    def make_cosave(co_type, co_path):
+        """Attempts to create a cosave of the specified type at the specified
+        path and logs any resulting error.
+
+        :rtype: cosaves.ACosave | None"""
+        try:
+            return co_type(co_path)
+        except (OSError, IOError, FileError) as e:
+            if isinstance(e, FileError) or (isinstance(e, (
+                    OSError, IOError)) and e.errno != errno.ENOENT):
+                deprint(u'Failed to open %s' % co_path, traceback=True)
+            return None
 
     @staticmethod
     def get_cosaves_for_path(save_path):
         """Get ACosave instances for save_path if those paths exist.
-        Return a dict of those instances keyed by their type."""
+        Return a dict of those instances keyed by their type.
+
+        :rtype: dict[type, cosaves.ACosave]"""
         result = {}
         for co_type in SaveInfo.cosave_types:
-            co_path = co_type.get_cosave_path(save_path)
-            try:
-                result[co_type] = co_type(co_path)
-            except (OSError, IOError, FileError) as e:
-                if isinstance(e, FileError) or (isinstance(e, (
-                        OSError, IOError)) and e.errno != errno.ENOENT):
-                    deprint(u'Failed to open %s' % co_path, traceback=True)
+            new_cosave = SaveInfo.make_cosave(
+                co_type, co_type.get_cosave_path(save_path))
+            if new_cosave: result[co_type] = new_cosave
         return result
 
     def get_xse_cosave(self):
-        """:rtype: cosaves.xSECosave"""
-        try:
-            return self.get_cosave_instances()[xSECosave]
-        except KeyError:
-            return None
+        """:rtype: xSECosave | None"""
+        return self.get_cosave_instances().get(xSECosave, None)
 
     def get_pluggy_cosave(self):
-        """:rtype: PluggyCosave"""
-        try:
-            return self.get_cosave_instances()[PluggyCosave]
-        except KeyError:
-            return None
+        """:rtype: PluggyCosave | None"""
+        return self.get_cosave_instances().get(PluggyCosave, None)
 
     def get_masters(self):
         if bush.game.has_esl:
             xse_cosave = self.get_xse_cosave()
             if xse_cosave is not None: # the cached cosave should be valid
                 # Make sure the cosave's masters are actually useful
-                if xse_cosave.has_accurate_master_list(True):
+                if xse_cosave.has_accurate_master_list(has_esl=True):
                     return [GPath(master) for master in
                             xse_cosave.get_master_list()]
         # Fall back on the regular masters - either the cosave is unnecessary,
