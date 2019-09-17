@@ -1005,6 +1005,8 @@ class WeaponModsPatcher(importers.WeaponModsPatcher, _ListPatcherPanel): pass
 
 class KeywordsImporter(importers.KeywordsImporter, _ImporterPatcherPanel): pass
 
+class TextImporter(importers.TextImporter, _ImporterPatcherPanel): pass
+
 # Patchers 30 -----------------------------------------------------------------
 class AssortedTweaker(multitweak_assorted.AssortedTweaker,
                       _TweakPatcherPanel): default_isEnabled = True
