@@ -1575,14 +1575,14 @@ class MreBook(MelRecord):
         MelModel(),
         MelString('ICON','iconPath'),
         MelString('MICO','smallIconPath'),
-        MelLString('DESC','description'),
+        MelLString('DESC','bookText'),
         MelDestructible(),
         MelOptStruct('YNAM','I',(FID,'pickupSound')),
         MelOptStruct('ZNAM','I',(FID,'dropSound')),
         MelKeywords(),
         MelBookData(),
         MelFid('INAM','inventoryArt'),
-        MelLString('CNAM','text'),
+        MelLString('CNAM','description'),
         )
     __slots__ = melSet.getSlotsUsed() + ['modb']
 
