@@ -348,6 +348,36 @@ class ConfigHelpers:
         else:
             return False, ''
 
+    # BashTags dir ------------------------------------------------------------
+    def get_tags_from_dir(self, plugin_name):
+        """Retrieves a tuple containing a set of added and a set of deleted
+        tags from the 'Data/BashTags/PLUGIN_NAME.txt' file, if it is
+        present.
+
+        :param plugin_name: The name of the plugin to check the tag file for.
+        :return: A tuple containing two sets of added and deleted tags."""
+        # Check if the file even exists first
+        tag_files_dir = bass.dirs['tag_files']
+        tag_file = tag_files_dir.join(plugin_name.body + u'.txt')
+        if not tag_file.isfile(): return set(), set()
+        removed, added = set(), set()
+        with tag_file.open('r') as ins:
+            for tag_line in ins:
+                # Strip out comments and skip lines that are empty as a result
+                tag_line = tag_line.split(u'#')[0].strip()
+                if not tag_line: continue
+                for tag_entry in tag_line.split(u','):
+                    # Guard against things (e.g. typos) like 'TagA,,TagB'
+                    if not tag_entry: continue
+                    tag_entry = tag_entry.strip()
+                    # If it starts with a minus, it's removing a tag
+                    if tag_entry[0] == u'-':
+                        # Guard against a typo like '- C.Water'
+                        removed.add(tag_entry[1:].strip())
+                    else:
+                        added.add(tag_entry)
+        return added, removed
+
     #--Mod Checker ------------------------------------------------------------
     def refreshRuleSets(self):
         """Reloads ruleSets if file dates have changed."""
