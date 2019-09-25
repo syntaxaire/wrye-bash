@@ -208,11 +208,7 @@ class RecordHeader(object):
 class ModReader:
     """Wrapper around a TES4 file in read mode.
     Will throw a ModReaderror if read operation fails to return correct size.
-
-    **ModReader.recHeader must be set to the game's specific RecordHeader
-      class type, for ModReader to use.**
     """
-    recHeader = RecordHeader
 
     def __init__(self,inName,ins):
         """Initialize."""
@@ -322,7 +318,7 @@ class ModReader:
         """Read a ref (fid)."""
         return self.unpack('I',4)[0]
 
-    def unpackRecHeader(self): return ModReader.recHeader.unpack(self)
+    def unpackRecHeader(self): return RecordHeader.unpack(self)
 
     def unpackSubHeader(self,recType='----',expType=None,expSize=0):
         """Unpack a subrecord header.  Optionally checks for match with expected
