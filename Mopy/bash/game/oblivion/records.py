@@ -789,7 +789,8 @@ class MreDial(brec.MreDial):
     """Dialog record."""
     melSet = MelSet(
         MelString('EDID','eid'),
-        MelFids('QSTI','quests'), ### QSTRs?
+        MelFids('QSTI','quests'),
+        MelFids('QSTR','quests2'), # xEdit calls it 'Quests?'
         MelString('FULL','full'),
         MelStruct('DATA','B','dialType'),
     )
