@@ -94,10 +94,10 @@ DESC_ADDON = (
 CATEGORY = {"nightly": "Updates", "production": "Main Files"}
 REGEX = {
     "nightly": re.compile(
-        r"Wrye Bash \d{3,}\.\d{12,12} - (Installer|Python Source|Standalone Executable)"
+        r"Wrye Bash (\d{3,}\.\d{12,12}) - (?:Installer|Python Source|Standalone Executable)"
     ),
     "production": re.compile(
-        r"Wrye Bash .* - (Installer|Python Source|Standalone Executable)"
+        r"Wrye Bash (\d{3,})(?: (\w+) (\d+))? - (?:Installer|Python Source|Standalone Executable)"
     ),
 }
 SCRIPTS_PATH = os.path.dirname(os.path.abspath(__file__))
@@ -279,7 +279,12 @@ def remove_files(driver, release, dry_run=False):
 def upload_file(driver, fpath, release, dry_run=False):
     fname = os.path.basename(fpath)
     name = os.path.splitext(fname)[0]
-    version = name.split()[2]
+    match = re.match(REGEX[release], name)
+    version = match.group(1)
+    if release == "production":
+        stage, stage_num = match.group(2, 3)
+        if stage is not None:
+            version += "." + stage.lower() + stage_num
     # mod name
     mod_name_elem = driver.find_element_by_name("name")
     mod_name_elem.send_keys(name)
