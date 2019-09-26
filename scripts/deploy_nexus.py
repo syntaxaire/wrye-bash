@@ -71,6 +71,8 @@ ID_DICT = {
     130: 64580,
     # fallout 4
     1151: 20032,
+    # enderal
+    2736: 97,
 }
 DESC_DICT = {
     "Installer": (
@@ -89,11 +91,15 @@ DESC_ADDON = (
     " This is the latest development version fixing many bugs and "
     "adding new features - use this in preference to the main files."
 )
-CATEGORY = "Updates"
-FILE_REGEX = (
-    r"Wrye Bash \d{3,}\.\d{12,12} - (Installer|Python Source|Standalone Executable)"
-)
-COMPILED_REGEX = re.compile(FILE_REGEX)
+CATEGORY = {"nightly": "Updates", "production": "Main Files"}
+REGEX = {
+    "nightly": re.compile(
+        r"Wrye Bash \d{3,}\.\d{12,12} - (Installer|Python Source|Standalone Executable)"
+    ),
+    "production": re.compile(
+        r"Wrye Bash .* - (Installer|Python Source|Standalone Executable)"
+    ),
+}
 SCRIPTS_PATH = os.path.dirname(os.path.abspath(__file__))
 BUILD_PATH = os.path.join(SCRIPTS_PATH, "build")
 CHROMEDRIVER_PATH = os.path.join(utils.DEPLOY_FOLDER, "chromedriver.exe")
@@ -149,6 +155,22 @@ def setup_parser(parser):
         default=None,
         help="Provide a version to override the current chromedriver.",
     )
+    version_group = parser.add_mutually_exclusive_group()
+    version_group.add_argument(
+        "--nightly",
+        action="store_const",
+        const="nightly",
+        dest="release",
+        help="Deploy as nightly release to 'Updates' category [default].",
+    )
+    version_group.add_argument(
+        "--production",
+        action="store_const",
+        const="production",
+        dest="release",
+        help="Deploy as production release to 'Main Files' category.",
+    )
+    parser.set_defaults(release="nightly")
 
 
 def install_chromedriver(version_override=None):
@@ -223,14 +245,16 @@ def load_cookies(driver, creds):
         driver.add_cookie(cookie)
 
 
-def remove_files(driver, dry_run=False):
-    xpath = "//div[@class='file-category']/h3[text()='{}']/../ol/li".format(CATEGORY)
+def remove_files(driver, release, dry_run=False):
+    xpath = "//div[@class='file-category']/h3[text()='{}']/../ol/li".format(
+        CATEGORY[release]
+    )
     file_entries = driver.find_elements_by_xpath(xpath)
     for entry in file_entries:
         fname_xpath = "div[@class='file-head']/h4"
         fname = entry.find_element_by_xpath(fname_xpath).text
         LOGGER.debug("Checking file '{}'...".format(fname))
-        if COMPILED_REGEX.match(fname) is None:
+        if REGEX[release].match(fname) is None:
             continue
         LOGGER.debug("File '{}' has matched.".format(fname))
         if dry_run:
@@ -252,7 +276,7 @@ def remove_files(driver, dry_run=False):
     time.sleep(5)
 
 
-def upload_file(driver, fpath, dry_run=False):
+def upload_file(driver, fpath, release, dry_run=False):
     fname = os.path.basename(fpath)
     name = os.path.splitext(fname)[0]
     version = name.split()[2]
@@ -272,11 +296,11 @@ def upload_file(driver, fpath, dry_run=False):
     )
     # mod category
     category_select = Select(driver.find_element_by_id("select-file-category"))
-    category_select.select_by_visible_text(CATEGORY)
+    category_select.select_by_visible_text(CATEGORY[release])
     actual_category = category_select.first_selected_option.text
     LOGGER.info("File category: '{}'".format(actual_category))
-    assert actual_category == CATEGORY, (
-        "Mod category was not correctly selected. Expected: " + CATEGORY
+    assert actual_category == CATEGORY[release], (
+        "Mod category was not correctly selected. Expected: " + CATEGORY[release]
     )
     # mod description
     mod_desc = next(value for key, value in DESC_DICT.iteritems() if key in name)
@@ -331,13 +355,13 @@ def main(args):
                 "&id={}&game_id={}".format(mod_id, game_id)
             )
             LOGGER.info("Deleting old files for game {}.".format(game_id))
-            remove_files(driver, args.dry_run)
+            remove_files(driver, args.release, args.dry_run)
             LOGGER.info("Uploading new files for game {}.".format(game_id))
             for fname in os.listdir(args.dist_folder):
                 fpath = os.path.join(args.dist_folder, fname)
                 if not os.path.isfile(fpath):
                     continue
-                upload_file(driver, fpath, args.dry_run)
+                upload_file(driver, fpath, args.release, args.dry_run)
 
 
 if __name__ == "__main__":
