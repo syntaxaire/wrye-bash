@@ -155,6 +155,12 @@ def setup_parser(parser):
         default=None,
         help="Provide a version to override the current chromedriver.",
     )
+    parser.add_argument(
+        "--no-headless",
+        action="store_false",
+        dest="headless",
+        help="Run with a fully visible browser. Useful for debugging.",
+    )
     version_group = parser.add_mutually_exclusive_group()
     version_group.add_argument(
         "--nightly",
@@ -220,14 +226,15 @@ def install_chromedriver(version_override=None):
     os.rmdir(download_dir)
 
 
-def setup_driver():
+def setup_driver(headless=True):
     options = webdriver.ChromeOptions()
     options.add_experimental_option("excludeSwitches", ["enable-logging"])
     options.add_argument("--log-level=3")
     options.add_argument("--ignore-certificate-errors")
     options.add_argument("--ignore-ssl-errors")
-    options.add_argument("--disable-gpu")
-    options.add_argument("--headless")
+    if headless:
+        options.add_argument("--disable-gpu")
+        options.add_argument("--headless")
     driver = Chrome(CHROMEDRIVER_PATH, chrome_options=options)
     LOGGER.debug("Successfully created a new chrome driver")
     return driver
@@ -352,7 +359,7 @@ def main(args):
         args, ["member_id", "pass_hash", "sid"], args.save_config
     )
     install_chromedriver(args.driver_version)
-    driver = setup_driver()
+    driver = setup_driver(args.headless)
     driver.maximize_window()
     load_cookies(driver, creds)
     with closing(driver):
