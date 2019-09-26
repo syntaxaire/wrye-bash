@@ -330,13 +330,15 @@ def upload_file(driver, fpath, release, dry_run=False):
     # Will wait 1 hour for file upload - no point in doing timeouts if goal is ci
     WebDriverWait(driver, 3600).until(
         ec.text_to_be_present_in_element(
-            (By.XPATH, "//div[@id='file_uploader']/p"), fname + " has been uploaded."
+            (By.XPATH, "//div[@id='upload_success']"), fname + " has been uploaded."
         )
     )
     LOGGER.debug("Upload finished.")
     # page will auto refresh after "saving" the new file
     with wait_for_page_load(driver):
-        driver.find_element_by_xpath("//div[@class='btn inline mod-add-file']").click()
+        driver.find_element_by_xpath(
+            "//button[@class='btn inline mod-add-file']"
+        ).click()
 
 
 def main(args):
