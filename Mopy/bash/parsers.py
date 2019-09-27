@@ -311,92 +311,43 @@ class _PBashParser(_AParser):
             loaded_mod.safeSave()
         return num_changed_records
 
-class ActorFactions:
-    """Factions for npcs and creatures with functions for
-    importing/exporting from/to mod/text file."""
+class ActorFactions(_PBashParser):
+    """Parses factions from NPCs and Creatures (in games that have those). Can
+    read and write both plugins and CSV, and uses a single pass if called from
+    a patcher, but two passes if called from a link."""
 
-    def __init__(self,aliases=None):
-        self.types = tuple([MreRecord.type_class[x] for x in ('CREA','NPC_')])
-        self.type_id_factions = {'CREA':{},'NPC_':{}} #--factions =
-        # type_id_factions[type][longid]
-        self.id_eid = {}
-        self.aliases = aliases or {}
-        self.gotFactions = set()
+    def __init__(self):
+        super(ActorFactions, self).__init__()
+        fac_types = ('CREA', 'NPC_',)
+        # We don't need the first pass if we're used by the parser
+        self.fp_types = fac_types if not self.called_from_patcher else ()
+        self.sp_types = fac_types
 
-    def readFactionEids(self,modInfo):
-        """Extracts faction editor ids from modInfo and its masters."""
-        loadFactory = LoadFactory(False,MreRecord.type_class['FACT'])
-        for modName in (modInfo.get_masters() + [modInfo.name]):
-            if modName in self.gotFactions: continue
-            modFile = ModFile(bosh.modInfos[modName],loadFactory)
-            modFile.load(True)
-            mapper = modFile.getLongMapper()
-            for record in modFile.FACT.getActiveRecords():
-                self.id_eid[mapper(record.fid)] = record.eid
-            self.gotFactions.add(modName)
+    def _read_record_fp(self, record):
+        return record.eid
 
-    def readFromMod(self,modInfo):
-        """Imports faction data from specified mod."""
-        self.readFactionEids(modInfo)
-        type_id_factions,types,id_eid = self.type_id_factions,self.types,\
-                                        self.id_eid
-        loadFactory = LoadFactory(False,*types)
-        modFile = ModFile(modInfo,loadFactory)
-        modFile.load(True)
-        mapper = modFile.getLongMapper()
-        for type_ in (x.classType for x in types):
-            typeBlock = modFile.tops.get(type_,None)
-            if not typeBlock: continue
-            id_factions = type_id_factions[type_]
-            for record in typeBlock.getActiveRecords():
-                longid = mapper(record.fid)
-                if record.factions:
-                    id_eid[longid] = record.eid
-                    id_factions[longid] = [(mapper(x.faction),x.rank) for x in
-                                           record.factions]
+    def _is_record_useful(self, record):
+        return bool(record.factions)
 
-    def writeToMod(self,modInfo):
-        """Exports faction data to specified mod."""
-        type_id_factions,types = self.type_id_factions,self.types
-        loadFactory = LoadFactory(True,*types)
-        modFile = ModFile(modInfo,loadFactory)
-        modFile.load(True)
-        mapper = modFile.getLongMapper()
-        shortMapper = modFile.getShortMapper()
-        changed = defaultdict(int) # {'CREA':0,'NPC_':0}
-        for type_ in (x.classType for x in types):
-            id_factions = type_id_factions.get(type_,None)
-            typeBlock = modFile.tops.get(type_,None)
-            if not id_factions or not typeBlock: continue
-            for record in typeBlock.records:
-                longid = mapper(record.fid)
-                if longid not in id_factions: continue
-                newFactions = set(id_factions[longid])
-                curFactions = set(
-                    (mapper(x.faction),x.rank) for x in record.factions)
-                changes = newFactions - curFactions
-                if not changes: continue
-                for faction,rank in changes:
-                    faction = shortMapper(faction)
-                    for entry in record.factions:
-                        if entry.faction == faction:
-                            entry.rank = rank
-                            break
-                    else:
-                        entry = MelObject()
-                        entry.faction = faction
-                        entry.rank = rank
-                        entry.unused1 = 'ODB'
-                        record.factions.append(entry)
-                    record.setChanged()
-                changed[type_] += 1
-        #--Done
-        if sum(changed.values()): modFile.safeSave()
-        return changed
+    def _read_record_sp(self, record):
+        return [(f.faction, f.rank) for f in record.factions]
+
+    def _write_record(self, record, new_info, cur_info):
+        for faction, rank in set(new_info) - set(cur_info):
+            for entry in record.factions:
+                if entry.faction == faction:
+                    entry.rank = rank
+                    break
+            else:
+                entry = MelObject()
+                entry.faction = faction
+                entry.rank = rank
+                entry.unused1 = 'ODB'
+                record.factions.append(entry)
 
     def readFromText(self,textPath):
         """Imports faction data from specified text file."""
-        type_id_factions = self.type_id_factions
+        type_id_factions = self.id_stored_info
         aliases = self.aliases
         with CsvReader(textPath) as ins:
             for fields in ins:
@@ -416,7 +367,7 @@ class ActorFactions:
 
     def writeToText(self,textPath):
         """Exports faction data to specified text file."""
-        type_id_factions,id_eid = self.type_id_factions,self.id_eid
+        type_id_factions,id_eid = self.id_stored_info, self.id_context
         headFormat = u'"%s","%s","%s","%s","%s","%s","%s","%s"\n'
         rowFormat = u'"%s","%s","%s","0x%06X","%s","%s","0x%06X","%s"\n'
         with textPath.open('w',encoding='utf-8-sig') as out:
