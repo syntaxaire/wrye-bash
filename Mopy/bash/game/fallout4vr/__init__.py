@@ -42,6 +42,9 @@ class Fallout4VRGameInfo(Fallout4GameInfo):
         u'Fallout4Custom.ini',
         u'Fallout4VrCustom.ini',
     ]
+    # TODO(inf) This is apparently wrong - someone tried launching and it
+    #  couldn't find the game, but they didn't get back to me with the right
+    #  path...
     regInstallKeys = (u'Bethesda Softworks\\Fallout 4 VR', u'Installed Path')
 
     vanilla_string_bsas = {
