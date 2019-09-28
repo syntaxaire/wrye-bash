@@ -1024,6 +1024,11 @@ graphicsModelAttrs = ('model','shellCasingModel','scopeModel','worldModel')
 #------------------------------------------------------------------------------
 inventoryTypes = ('CREA','NPC_','CONT',)
 
+#------------------------------------------------------------------------------
+# Factions Patcher
+#------------------------------------------------------------------------------
+factions_types = {'CREA', 'NPC_',}
+
 # Record type to name dictionary
 record_type_name = {
     'ALCH':_(u'Potions'),

@@ -1357,7 +1357,7 @@ class ImportFactions(_SimpleImporter, _AImportFactions):
         #--Finish
         id_factions = self.id_data
         for type, aFid_factions in actorFactions.id_stored_info.iteritems():
-            if type not in ('CREA','NPC_'): continue
+            if type not in bush.game.factions_types: continue
             self.activeTypes.append(type)
             for longid,factions in aFid_factions.iteritems():
                 id_factions[longid] = factions
