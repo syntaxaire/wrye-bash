@@ -43,6 +43,20 @@ COMPILED = re.compile(FILE_REGEX)
 
 def setup_parser(parser):
     parser.add_argument(
+        "-i",
+        "--app-id",
+        default=argparse.SUPPRESS,
+        help="The Wrye Bash Dropbox App ID.\n"
+        "  This is required to access the deployment app the devs use.",
+    )
+    parser.add_argument(
+        "-s",
+        "--app-secret",
+        default=argparse.SUPPRESS,
+        help="The Wrye Bash Dropbox App Secret.\n"
+        "  This is required to access the deployment app the devs use.",
+    )
+    parser.add_argument(
         "-t",
         "--access-token",
         default=argparse.SUPPRESS,
@@ -93,7 +107,9 @@ def upload_file(dbx, fpath, folder_path, dry_run=False):
 
 def main(args):
     utils.setup_log(LOGGER, verbosity=args.verbosity, logfile=args.logfile)
-    creds = utils.parse_deploy_credentials(args, ["access_token"], args.save_config)
+    creds = utils.parse_deploy_credentials(
+        args, ["access_token", "app_id", "app_secret"], args.save_config
+    )
     # setup dropbox instance
     dbx = dropbox.Dropbox(creds["access_token"])
     shared_folder_path = dbx.sharing_get_folder_metadata(SHARED_FOLDER_ID).path_lower

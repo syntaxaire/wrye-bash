@@ -44,9 +44,6 @@ DEPLOY_LOG = os.path.join(ROOT_PATH, "deploy.log")
 DEPLOY_CONFIG = os.path.join(DEPLOY_FOLDER, "deploy_config.json")
 DIST_PATH = os.path.join(ROOT_PATH, "dist")
 
-DROPBOX_CLIENT_ID = "ipcc9y4nanxawyr"
-DROPBOX_CLIENT_SECRET = "0k28mfqgdyjnjpb"
-
 # verbosity:
 #  quiet (warnings and above)
 #  regular (info and above)
@@ -129,14 +126,20 @@ def parse_deploy_credentials(cli_args, required_creds, save_config=True):
 
     # dropbox
     if "access_token" in required_creds and creds["access_token"] is None:
+        if None in (creds.get("app_id"), creds.get("app_secret")):
+            creds["app_id"] = raw_input(
+                "Please enter the Wrye Bash Dropbox App ID:\n> "
+            )
+            creds["app_secret"] = raw_input(
+                "Please enter the Wrye Bash Dropbox App Secret:\n> "
+            )
         auth_flow = dropbox.DropboxOAuth2FlowNoRedirect(
-            DROPBOX_CLIENT_ID, DROPBOX_CLIENT_SECRET
+            creds["app_id"], creds["app_secret"]
         )
         authorize_url = auth_flow.start()
         webbrowser.open_new_tab(authorize_url)
-        auth_code = raw_input("Enter the authorization code here: ").strip()
-        access_token = auth_flow.finish(auth_code).access_token
-        creds["access_token"] = access_token
+        auth_code = raw_input("Enter the authorization code here:\n> ").strip()
+        creds["access_token"] = auth_flow.finish(auth_code).access_token
 
     # nexus
     required = all(elem in ("member_id", "pass_hash", "sid") for elem in required_creds)
