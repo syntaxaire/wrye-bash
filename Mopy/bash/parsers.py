@@ -1029,6 +1029,7 @@ class FactionRelations(_PBashParser):
     and CSV, and uses two passes to do so. Also tracks newly introduced
     relations that get deleted by a later plugin in id_deleted if called from
     a patcher."""
+    cls_rel_attrs = bush.game.relations_attrs
 
     def __init__(self):
         super(FactionRelations, self).__init__()
@@ -1070,7 +1071,7 @@ class FactionRelations(_PBashParser):
         # Merge added relations, preserve changed relations
         for relation in record.relations:
             rel_attrs = tuple(getattr(relation, a) for a
-                              in ('faction', 'mod',))
+                              in self.cls_rel_attrs)
             other_fac = rel_attrs[0]
             if other_fac in other_index:
                 # This is just a change, preserve the latest value
@@ -1089,17 +1090,18 @@ class FactionRelations(_PBashParser):
             for entry in record.relations:
                 if rel_fac == entry.faction:
                     # Just a change, change the attributes
-                    for rel_attr, rel_val in zip(('faction', 'mod'), relation):
+                    for rel_attr, rel_val in zip(self.cls_rel_attrs, relation):
                         setattr(entry, rel_attr, rel_val)
             else:
                 # It's an addition, we need to make a new relation object
                 entry = MelObject()
-                for rel_attr, rel_val in zip(('faction', 'mod'), relation):
+                for rel_attr, rel_val in zip(self.cls_rel_attrs, relation):
                     setattr(entry, rel_attr, rel_val)
                 record.relations.append(entry)
 
     def readFromText(self,textPath):
         """Imports faction relations from specified text file."""
+        # TODO(inf) Update this for bush.game.relations_attrs!
         id_relations = self.id_stored_info['FACT']
         aliases = self.aliases
         with CsvReader(textPath) as ins:
@@ -1123,6 +1125,7 @@ class FactionRelations(_PBashParser):
 
     def writeToText(self,textPath):
         """Exports faction relations to specified text file."""
+        # TODO(inf) Update this for bush.game.relations_attrs!
         id_relations,id_eid = self.id_stored_info['FACT'], self.id_context
         headFormat = u'"%s","%s","%s","%s","%s","%s","%s"\n'
         rowFormat = u'"%s","%s","0x%06X","%s","%s","0x%06X","%s"\n'

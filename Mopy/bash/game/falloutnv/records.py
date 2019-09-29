@@ -1479,7 +1479,7 @@ class MreRace(MelRecord):
         MelString('EDID','eid'),
         MelString('FULL','full'),
         MelString('DESC','text'),
-        MelStructs('XNAM','I2i','relations',(FID,'faction'),'mod','groupCombatReaction'),
+        MelStructs('XNAM','IiI','relations',(FID,'faction'),'mod','groupCombatReaction'),
         MelStruct('DATA','14b2s4fI','skill1','skill1Boost','skill2','skill2Boost',
                   'skill3','skill3Boost','skill4','skill4Boost','skill5','skill5Boost',
                   'skill6','skill6Boost','skill7','skill7Boost',('unused1',null2),

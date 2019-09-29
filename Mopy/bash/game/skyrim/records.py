@@ -2675,7 +2675,8 @@ class MreFact(MelRecord):
     melSet = MelSet(
         MelString('EDID','eid'),
         MelLString('FULL','full'),
-        MelStructs('XNAM','IiI','relations',(FID,'faction'),'mod','combatReaction',),
+        MelStructs('XNAM', 'IiI', 'relations', (FID, 'faction'), 'mod',
+                   'groupCombatReaction',),
         MelStruct('DATA','I',(FactGeneralTypeFlags,'flags',0L),),
         MelFid('JAIL','exteriorJailMarker'),
         MelFid('WAIT','followerWaitMarker'),
@@ -2703,11 +2704,10 @@ class MreFact(MelRecord):
         )
     __slots__ = melSet.getSlotsUsed()
 
-    def dumpData(self,out):
+    def dumpData(self, out):
         conditions = self.conditions
-        if conditions:
-            self.conditionCount = len(conditions) if conditions else 0
-            MelRecord.dumpData(self,out)
+        self.conditionCount = len(conditions) if conditions else 0
+        super(MreFact, self).dumpData(out)
 
 # Verified for 305
 #------------------------------------------------------------------------------

@@ -398,6 +398,11 @@ class GameInfo(object):
     #--------------------------------------------------------------------------
     factions_types = set()
 
+    #--------------------------------------------------------------------------
+    # Relations Patcher
+    #--------------------------------------------------------------------------
+    relations_attrs = ()
+
     # Record type to name dictionary
     record_type_name = {}
 
@@ -432,7 +437,7 @@ class GameInfo(object):
         'fid1Conditions', 'fid2Conditions', 'fid5Conditions', 'gmstEids',
         'graphicsFidTypes', 'graphicsLongsTypes', 'graphicsModelAttrs',
         'graphicsTypes', 'inventoryTypes', 'listTypes', 'namesTypes',
-        'pricesTypes', 'record_type_name', 'save_rec_types',
+        'pricesTypes', 'record_type_name', 'relations_attrs', 'save_rec_types',
         'soundsLongsTypes', 'soundsTypes', 'statsHeaders', 'statsTypes',
         'xEdit_expert',
     }

@@ -62,7 +62,7 @@ class SkyrimSEGameInfo(SkyrimGameInfo):
     patchers = (
         u'CellImporter', u'GmstTweaker', u'GraphicsPatcher',
         u'ImportInventory', u'ListsMerger', u'SoundPatcher', u'StatsPatcher',
-        u'NamesPatcher', u'ImportFactions',
+        u'NamesPatcher', u'ImportFactions', u'ImportRelations',
     )
 
     # MreScpt is Oblivion/FO3/FNV Only

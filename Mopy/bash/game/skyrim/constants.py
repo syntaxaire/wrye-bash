@@ -17043,7 +17043,7 @@ listTypes = ('LVLI','LVLN','LVSP',)
 # remaining to add: 'PERK', 'RACE',
 # Removed because nothing else is patching it: FACT
 namesTypes = {'ACTI', 'ALCH', 'AMMO', 'APPA', 'ARMO', 'AVIF', 'BOOK', 'CLAS',
-              'CLFM', 'CONT', 'DIAL', 'DOOR', 'ENCH', 'EXPL', 'EYES',
+              'CLFM', 'CONT', 'DIAL', 'DOOR', 'ENCH', 'EXPL', 'EYES', 'FACT',
               'FLOR', 'FURN', 'HAZD', 'HDPT', 'INGR', 'KEYM', 'LCTN', 'LIGH',
               'MESG', 'MGEF', 'MISC', 'MSTT', 'NPC_', 'PROJ', 'SCRL', 'SHOU',
               'SLGM', 'SNCT', 'SPEL', 'TACT', 'TREE', 'WATR', 'WEAP', 'WOOP'}
@@ -17311,6 +17311,11 @@ inventoryTypes = ('NPC_','CONT',)
 # Factions Patcher
 #------------------------------------------------------------------------------
 factions_types = {'NPC_',}
+
+#------------------------------------------------------------------------------
+# Relations Patcher
+#------------------------------------------------------------------------------
+relations_attrs = ('faction', 'mod', 'groupCombatReaction',)
 
 # Record type to name dictionary
 record_type_name = {
