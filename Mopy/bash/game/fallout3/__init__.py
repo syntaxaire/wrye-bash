@@ -122,8 +122,7 @@ class Fallout3GameInfo(GameInfo):
                u'C.Light', u'C.Music', u'C.Name', u'C.Owner', u'C.RecordFlags',
                u'C.Water', u'Deactivate', u'Deflst', u'Delev', u'Destructible',
                u'Factions', u'Filter', u'Graphics', u'Invent', u'Names',
-               u'NoMerge', u'Relations', u'Relev', u'Sound', u'Stats',
-               u'Text',}
+               u'NoMerge', u'Relev', u'Sound', u'Stats', u'Text',}
 
     # ActorImporter, AliasesPatcher, AssortedTweaker, CellImporter, ContentsChecker,
     # DeathItemPatcher, DestructiblePatcher, FidListsMerger, GlobalsTweaker,
@@ -135,9 +134,8 @@ class Fallout3GameInfo(GameInfo):
     patchers = (
         u'AliasesPatcher', u'CellImporter', u'DestructiblePatcher',
         u'FidListsMerger', u'GmstTweaker', u'GraphicsPatcher',
-        u'ImportFactions', u'ImportInventory', u'ImportRelations',
-        u'ListsMerger', u'NamesPatcher', u'PatchMerger', u'SoundPatcher',
-        u'StatsPatcher', u'TextImporter',
+        u'ImportFactions', u'ImportInventory', u'ListsMerger', u'NamesPatcher',
+        u'PatchMerger', u'SoundPatcher', u'StatsPatcher', u'TextImporter',
     )
 
     weaponTypes = (
